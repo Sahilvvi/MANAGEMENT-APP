@@ -1,0 +1,124 @@
+Build a **luxury-grade enterprise mobile application** (iOS-first design, Apple-level UI/UX) for a multi-vertical business ecosystem (Healthcare, Petroleum, Agriculture, Mining, Hospitality, NGO, Corporate).
+
+## 🎯 CORE OBJECTIVE
+
+Create a **centralized operations management system** with role-based access and AI-powered automation for real-time business control.
+
+## 👥 USER ROLES (STRICT RBAC)
+
+* Owner (Super Admin)
+* General Manager
+* Manager
+* Employee
+* Accountant
+* Premium Customer
+* Walking Customer (OTP-based quick login)
+
+## 📊 OWNER DASHBOARD (PRIORITY)
+
+* Multi-vertical cards (9 business units)
+* Tap → drill-down analytics:
+
+  * Daily revenue
+  * Employee attendance & scores
+  * Alerts (maintenance, violations)
+  * Incident reports
+* AI Daily Report (audio + text)
+* Ask AI follow-up questions (chat interface)
+
+## 🤖 AGENTIC AI SYSTEM (CORE USP)
+
+* Auto-generate daily reports:
+
+  * Employee performance
+  * Revenue breakdown
+  * Task completion
+  * Complaints & actions
+* Voice + text output
+* Real-time Q&A with data integrity (NO hallucination)
+
+## 👷 EMPLOYEE SYSTEM
+
+* AI Selfie Check-in:
+
+  * Face detection
+  * Uniform detection
+  * Geo-tagging
+* Geo-fencing + Drift detection
+* Smart random check-ins (context-aware)
+* Score system (0–100):
+
+  * punctuality
+  * compliance
+  * task completion
+  * feedback
+* Fine system → auto contributes to Wellness Fund
+
+## 💰 ACCOUNTANT MODULE
+
+* Revenue tracking (per vertical)
+* Expense logging (photo upload)
+* Payroll automation:
+
+  * salary + score adjustments - fines + bonus
+* GST / Tax / Compliance
+* P&L dashboard
+* Bank reconciliation
+
+## 🏗️ ASSET MANAGEMENT SYSTEM
+
+* Fixed assets (machines, infra)
+* Movable assets (vehicles, tools)
+* Consumables tracking
+* Maintenance scheduler:
+
+  * auto reminders
+  * escalation to owner
+* Photo proof logging
+
+## 📋 MANAGER MODULE
+
+* Team dashboard
+* Task assignment & tracking
+* Approval workflows
+* Incident reporting (with media)
+* Shift & roster management
+
+## ⚙️ GENERAL FEATURES
+
+* Daily/weekly worksheets
+* Task checklists
+* Break timer system
+* Notifications (real-time)
+* Offline mode support
+
+## 🎨 UI/UX (APPLE-LIKE LUXURY)
+
+* Minimalist white + glassmorphism
+* Smooth micro-interactions
+* Soft shadows, blur effects
+* Fluid animations (120fps feel)
+* Typography: SF Pro / Inter
+* Haptic feedback for actions
+
+## 📱 TECH REQUIREMENTS
+
+* React Native (Expo)
+* Backend: Node.js / NestJS
+* DB: PostgreSQL (single unified DB)
+* Realtime: WebSockets
+* AI: OpenAI + Vision APIs
+
+## ⚡ PERFORMANCE
+
+* <200ms response time
+* Offline-first architecture
+* Scalable to 10,000+ users
+
+## 🔒 SECURITY
+
+* Role-based access control
+* End-to-end encryption
+* Audit logs
+
+Deliver a production-ready, scalable enterprise-grade system.
