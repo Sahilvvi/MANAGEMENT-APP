@@ -40,6 +40,11 @@ export interface Worker {
   jobType: string;
   phone: string;
   business: string;
+  salary: number;
+  joinDate: string;
+  address: string;
+  attendance: "present" | "absent" | "late";
+  avatar?: string;
 }
 
 export interface Manager {
@@ -47,6 +52,11 @@ export interface Manager {
   name: string;
   phone: string;
   business: string;
+  salary: number;
+  joinDate: string;
+  address: string;
+  attendance: "present" | "absent" | "late";
+  avatar?: string;
 }
 
 export type TaskRecurrence = "once" | "daily" | "weekly" | "monthly";
@@ -202,15 +212,15 @@ const BUSINESSES: Business[] = [
 ];
 
 const WORKERS: Worker[] = [
-  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", business: "lawn" },
-  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", business: "lawn" },
-  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", business: "lawn" },
-  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", business: "lawn" },
-  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", business: "lawn" },
+  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", business: "lawn", salary: 12000, joinDate: "2023-04-15", address: "Village Green, Near Main Gate, Lucknow", attendance: "present" },
+  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", business: "lawn", salary: 15000, joinDate: "2023-05-10", address: "Plot 12, Staff Quarters, Lucknow", attendance: "present" },
+  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", business: "lawn", salary: 13000, joinDate: "2023-06-01", address: "House 4, Green Park Colony, Lucknow", attendance: "late" },
+  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", business: "lawn", salary: 14000, joinDate: "2023-07-20", address: "Sector 7, Workers Lane, Lucknow", attendance: "present" },
+  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", business: "lawn", salary: 12500, joinDate: "2024-01-08", address: "Near Workshop, Lawn Campus, Lucknow", attendance: "present" },
 ];
 
 const MANAGERS: Manager[] = [
-  { id: "lawn-m1", name: "Sunita Devi", phone: "9876543200", business: "lawn" },
+  { id: "lawn-m1", name: "Sunita Devi", phone: "9876543200", business: "lawn", salary: 28000, joinDate: "2022-11-20", address: "Manager Residence, Lawn Care Office, Lucknow", attendance: "present" },
 ];
 
 function isoDate(offsetDays = 0) {

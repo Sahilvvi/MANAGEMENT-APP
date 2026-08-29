@@ -36,6 +36,20 @@ const STATUS_LABEL: Record<Task["status"], string> = {
   overdue: "Overdue",
 };
 
+const STATUS_COLORS: Record<Task["status"], string> = {
+  pending: "#FF9500",
+  in_progress: "#0A84FF",
+  completed: "#34C759",
+  overdue: "#FF3B30",
+};
+
+const FILTERS: Array<{ key: "all" | Task["status"]; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "completed", label: "Completed" },
+  { key: "overdue", label: "Overdue" },
+];
+
 function isoToday() {
   return new Date().toISOString().split("T")[0];
 }
@@ -49,6 +63,7 @@ export default function TasksScreen() {
 
   const isWorker = user?.role === "employee";
 
+  const [filter, setFilter] = useState<"all" | Task["status"]>('all');
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -57,16 +72,16 @@ export default function TasksScreen() {
   const [newRecurrence, setNewRecurrence] = useState<TaskRecurrence>("daily");
 
   const filteredTasks = useMemo(() => {
-    const list = isWorker
+    const base = isWorker
       ? tasks.filter((t) => t.assigneeId === user?.id)
       : tasks.filter((t) => t.business === "lawn");
-    return [...list].sort((a, b) => {
+    const byStatus = filter === "all" ? base : base.filter((t) => t.status === filter);
+    return [...byStatus].sort((a, b) => {
       if (a.status === b.status) return a.dueDate.localeCompare(b.dueDate);
-      if (a.status === "pending") return -1;
-      if (b.status === "pending") return 1;
-      return a.dueDate.localeCompare(b.dueDate);
+      const order: Record<Task["status"], number> = { pending: 0, in_progress: 1, overdue: 2, completed: 3 };
+      return order[a.status] - order[b.status];
     });
-  }, [tasks, user, isWorker]);
+  }, [tasks, user, isWorker, filter]);
 
   const completedCount = filteredTasks.filter((t) => t.status === "completed").length;
   const totalCount = filteredTasks.length;
@@ -74,20 +89,29 @@ export default function TasksScreen() {
 
   const handleComplete = async (task: Task) => {
     try {
-      if (Platform.OS !== "web") {
+      let result: ImagePicker.ImagePickerResult;
+
+      if (Platform.OS === "web") {
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          quality: 0.3,
+          base64: true,
+        });
+      } else {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== "granted") {
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
+          Alert.alert("Permission needed", "Allow camera access to complete tasks with photo proof.");
+          return;
         }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.3,
+          base64: true,
+        });
       }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.3,
-        base64: true,
-      });
 
       if (result.canceled || !result.assets?.length) return;
 
@@ -96,7 +120,7 @@ export default function TasksScreen() {
       await completeTask(task.id, photo);
       showToast("Task completed and proof uploaded", "success");
     } catch (e) {
-      Alert.alert("Error", "Could not pick image. Try again.");
+      Alert.alert("Error", "Could not capture photo. Please try again.");
     }
   };
 
@@ -127,18 +151,27 @@ export default function TasksScreen() {
       style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
     >
       <View style={styles.cardHeader}>
-        <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLOR[item.priority] }]} />
-        <Text style={[styles.status, { color: colors.mutedForeground }]}>
-          {STATUS_LABEL[item.status]}
-        </Text>
+        <View style={styles.leftHeader}>
+          <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLOR[item.priority] }]} />
+          <Text style={[styles.status, { color: STATUS_COLORS[item.status] }]}>
+            {STATUS_LABEL[item.status]}
+          </Text>
+        </View>
+        <Text style={[styles.date, { color: colors.mutedForeground }]}>{item.dueDate}</Text>
       </View>
+
       <Text style={[styles.taskTitle, { color: colors.cardForeground }]}>{item.title}</Text>
       <Text style={[styles.taskDesc, { color: colors.mutedForeground }]}>{item.description}</Text>
 
       {!isWorker && (
-        <Text style={[styles.meta, { color: colors.mutedForeground }]}>
-          Assigned to {item.assigneeName} · {item.recurrence}
-        </Text>
+        <View style={styles.assigneeRow}>
+          <View style={[styles.miniAvatar, { backgroundColor: colors.gold + "20" }]}>
+            <Feather name="user" size={12} color={colors.gold} />
+          </View>
+          <Text style={[styles.meta, { color: colors.mutedForeground }]}>
+            {item.assigneeName} · {item.recurrence} · {item.priority} priority
+          </Text>
+        </View>
       )}
 
       {item.completionPhoto && (
@@ -156,6 +189,15 @@ export default function TasksScreen() {
           </Text>
         </Pressable>
       )}
+
+      {item.status === "completed" && (
+        <View style={[styles.doneBadge, { backgroundColor: colors.success + "15" }]}>
+          <Feather name="check-circle" size={14} color={colors.success} />
+          <Text style={[styles.doneText, { color: colors.success }]}>
+            Completed{item.completedAt ? ` on ${item.completedAt}` : ""}
+          </Text>
+        </View>
+      )}
     </Animated.View>
   );
 
@@ -163,7 +205,7 @@ export default function TasksScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 24 },
+        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
       ]}
     >
       <View style={styles.header}>
@@ -174,7 +216,7 @@ export default function TasksScreen() {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {isWorker
               ? `${completedCount}/${totalCount} completed today`
-              : "Create and track daily lawn tasks"}
+              : "Create, track and review daily lawn tasks"}
           </Text>
         </View>
         {!isWorker && (
@@ -188,13 +230,36 @@ export default function TasksScreen() {
       </View>
 
       {isWorker && (
-        <View style={[styles.scoreCard, { backgroundColor: `${colors.gold}15` }]}>
+        <View style={[styles.scoreCard, { backgroundColor: colors.gold + "12" }]}>
           <Text style={[styles.scoreValue, { color: colors.gold }]}>{completionRate}%</Text>
-          <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>
-            Completion rate
-          </Text>
+          <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>Completion rate</Text>
         </View>
       )}
+
+      <View style={styles.filterRow}>
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f.key}
+            onPress={() => setFilter(f.key)}
+            style={[
+              styles.filterChip,
+              {
+                backgroundColor: filter === f.key ? colors.gold : colors.card,
+                borderColor: filter === f.key ? colors.gold : colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                { color: filter === f.key ? colors.primaryForeground : colors.cardForeground },
+              ]}
+            >
+              {f.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <FlatList
         data={filteredTasks}
@@ -204,7 +269,7 @@ export default function TasksScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: colors.mutedForeground }]}>
-            No tasks found.
+            No tasks found for this filter.
           </Text>
         }
       />
@@ -212,109 +277,103 @@ export default function TasksScreen() {
       <Modal visible={showCreate} transparent animationType="fade">
         <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
           <View style={[styles.modal, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.cardForeground }]}>
-              New Task
-            </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.modalTitle, { color: colors.cardForeground }]}>New Task</Text>
 
-            <TextInput
-              placeholder="Task title"
-              placeholderTextColor={colors.mutedForeground}
-              value={newTitle}
-              onChangeText={setNewTitle}
-              style={[
-                styles.input,
-                { color: colors.cardForeground, borderColor: colors.border, backgroundColor: colors.background },
-              ]}
-            />
-            <TextInput
-              placeholder="Description"
-              placeholderTextColor={colors.mutedForeground}
-              value={newDesc}
-              onChangeText={setNewDesc}
-              multiline
-              style={[
-                styles.input,
-                { color: colors.cardForeground, borderColor: colors.border, backgroundColor: colors.background, height: 80 },
-              ]}
-            />
+              <TextInput
+                placeholder="Task title"
+                placeholderTextColor={colors.mutedForeground}
+                value={newTitle}
+                onChangeText={setNewTitle}
+                style={[styles.input, { color: colors.cardForeground, borderColor: colors.border, backgroundColor: colors.background }]}
+              />
+              <TextInput
+                placeholder="Description"
+                placeholderTextColor={colors.mutedForeground}
+                value={newDesc}
+                onChangeText={setNewDesc}
+                multiline
+                style={[styles.input, { color: colors.cardForeground, borderColor: colors.border, backgroundColor: colors.background, height: 80 }]}
+              />
 
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>Assign to</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerRow}>
-              {workers.map((w) => (
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>Assign to</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerRow}>
+                {workers.map((w) => (
+                  <Pressable
+                    key={w.id}
+                    onPress={() => setNewAssignee(w.id)}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: newAssignee === w.id ? colors.gold : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: newAssignee === w.id ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium" }}>
+                      {w.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>Priority</Text>
+              <View style={styles.pickerRow}>
+                {(["low", "medium", "high"] as Task["priority"][]).map((p) => (
+                  <Pressable
+                    key={p}
+                    onPress={() => setNewPriority(p)}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: newPriority === p ? colors.gold : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: newPriority === p ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium", textTransform: "capitalize" }}>
+                      {p}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>Recurrence</Text>
+              <View style={styles.pickerRow}>
+                {(["once", "daily", "weekly", "monthly"] as TaskRecurrence[]).map((r) => (
+                  <Pressable
+                    key={r}
+                    onPress={() => setNewRecurrence(r)}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: newRecurrence === r ? colors.gold : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: newRecurrence === r ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium", textTransform: "capitalize" }}>
+                      {r}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <View style={styles.modalActions}>
                 <Pressable
-                  key={w.id}
-                  onPress={() => setNewAssignee(w.id)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: newAssignee === w.id ? colors.gold : colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                  onPress={() => setShowCreate(false)}
+                  style={[styles.modalButton, { backgroundColor: colors.muted }]}
                 >
-                  <Text style={{ color: newAssignee === w.id ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium" }}>
-                    {w.name}
-                  </Text>
+                  <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }}>Cancel</Text>
                 </Pressable>
-              ))}
+                <Pressable
+                  onPress={handleCreateTask}
+                  style={[styles.modalButton, { backgroundColor: colors.primary }]}
+                >
+                  <Text style={{ color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }}>Assign</Text>
+                </Pressable>
+              </View>
             </ScrollView>
-
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>Priority</Text>
-            <View style={styles.pickerRow}>
-              {(["low", "medium", "high"] as Task["priority"][]).map((p) => (
-                <Pressable
-                  key={p}
-                  onPress={() => setNewPriority(p)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: newPriority === p ? colors.gold : colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text style={{ color: newPriority === p ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium", textTransform: "capitalize" }}>
-                    {p}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>Recurrence</Text>
-            <View style={styles.pickerRow}>
-              {(["once", "daily", "weekly", "monthly"] as TaskRecurrence[]).map((r) => (
-                <Pressable
-                  key={r}
-                  onPress={() => setNewRecurrence(r)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: newRecurrence === r ? colors.gold : colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text style={{ color: newRecurrence === r ? colors.primaryForeground : colors.cardForeground, fontFamily: "Inter_500Medium", textTransform: "capitalize" }}>
-                    {r}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <View style={styles.modalActions}>
-              <Pressable
-                onPress={() => setShowCreate(false)}
-                style={[styles.modalButton, { backgroundColor: colors.muted }]}
-              >
-                <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleCreateTask}
-                style={[styles.modalButton, { backgroundColor: colors.primary }]}
-              >
-                <Text style={{ color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }}>Assign</Text>
-              </Pressable>
-            </View>
           </View>
         </View>
       </Modal>
@@ -325,13 +384,13 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   title: {
     fontFamily: "Inter_700Bold",
@@ -343,39 +402,69 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   scoreCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: "center",
   },
   scoreValue: {
     fontFamily: "Inter_700Bold",
-    fontSize: 32,
+    fontSize: 34,
   },
   scoreLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
     marginTop: 2,
   },
+  filterRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+  },
   list: {
     paddingBottom: 24,
     gap: 12,
   },
   card: {
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,
-    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  leftHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -386,18 +475,37 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   status: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  date: {
     fontFamily: "Inter_500Medium",
     fontSize: 12,
-    textTransform: "capitalize",
   },
   taskTitle: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 16,
+    marginBottom: 4,
   },
   taskDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     lineHeight: 20,
+  },
+  assigneeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+  },
+  miniAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   meta: {
     fontFamily: "Inter_500Medium",
@@ -405,20 +513,38 @@ const styles = StyleSheet.create({
   },
   photo: {
     width: "100%",
-    height: 160,
-    borderRadius: 12,
-    marginTop: 8,
+    height: 180,
+    borderRadius: 14,
+    marginTop: 12,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 4,
+    paddingVertical: 13,
+    borderRadius: 14,
+    marginTop: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   actionText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 14,
+  },
+  doneBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginTop: 12,
+  },
+  doneText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
   },
@@ -432,19 +558,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: 20,
   },
   modal: {
     width: "100%",
-    maxWidth: 420,
-    borderRadius: 20,
+    maxWidth: 460,
+    borderRadius: 22,
     padding: 20,
-    gap: 12,
+    maxHeight: "90%",
   },
   modalTitle: {
     fontFamily: "Inter_700Bold",
     fontSize: 20,
-    marginBottom: 4,
+    marginBottom: 12,
   },
   input: {
     borderWidth: 1,
@@ -453,6 +579,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
+    marginBottom: 12,
   },
   label: {
     fontFamily: "Inter_500Medium",
@@ -460,11 +587,12 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginTop: 4,
+    marginBottom: 6,
   },
   pickerRow: {
     flexDirection: "row",
     gap: 8,
-    marginTop: 2,
+    marginBottom: 12,
   },
   chip: {
     paddingHorizontal: 12,

@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
@@ -8,8 +9,8 @@ import {
   Text,
   View,
 } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import { useAuth, type User } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -18,6 +19,7 @@ interface RoleOption {
   label: string;
   icon: keyof typeof Feather.glyphMap;
   description: string;
+  accent: [string, string];
   user: User;
 }
 
@@ -29,6 +31,7 @@ const ROLES: RoleOption[] = [
     label: "Super Admin",
     icon: "shield",
     description: "Full oversight of the lawn operation",
+    accent: ["#C9A84C", "#E8D59A"],
     user: { id: "lawn-admin", name: "Ravi Kumar", role: "owner", ...BASE },
   },
   {
@@ -36,6 +39,7 @@ const ROLES: RoleOption[] = [
     label: "Manager",
     icon: "briefcase",
     description: "Manage workers and daily operations",
+    accent: ["#0A84FF", "#5AC8FA"],
     user: { id: "lawn-manager", name: "Sunita Devi", role: "manager", ...BASE },
   },
   {
@@ -43,6 +47,7 @@ const ROLES: RoleOption[] = [
     label: "Worker",
     icon: "user",
     description: "Complete daily tasks and upload proof",
+    accent: ["#34C759", "#8CEF99"],
     user: { id: "lawn-worker", name: "Worker", role: "employee", ...BASE, jobType: "" },
   },
 ];
@@ -74,12 +79,19 @@ export default function RoleSelectScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: colors.gold }]}>{businessName}</Text>
+        <LinearGradient
+          colors={[colors.gold, colors.goldLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.badge}
+        >
+          <Text style={styles.badgeText}>{businessName}</Text>
+        </LinearGradient>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Select your role
+          Who is using the app today?
         </Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Choose the account you want to use today.
+          Select your role to access the right dashboard.
         </Text>
       </View>
 
@@ -99,14 +111,14 @@ export default function RoleSelectScreen() {
                 },
               ]}
             >
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: `${colors.gold}18` },
-                ]}
+              <LinearGradient
+                colors={option.accent}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconCircle}
               >
-                <Feather name={option.icon} size={28} color={colors.gold} />
-              </View>
+                <Feather name={option.icon} size={26} color="#FFF" />
+              </LinearGradient>
               <View style={styles.text}>
                 <Text style={[styles.cardTitle, { color: colors.cardForeground }]}>
                   {option.label}
@@ -133,25 +145,31 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   header: {
-    paddingTop: 24,
-    paddingBottom: 28,
-    gap: 6,
+    paddingTop: 28,
+    paddingBottom: 32,
+    gap: 10,
   },
-  eyebrow: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 13,
-    textTransform: "uppercase",
-    letterSpacing: 1,
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 12,
+    color: "#0A1628",
+    letterSpacing: 0.5,
   },
   title: {
     fontFamily: "Inter_700Bold",
     fontSize: 28,
-    marginTop: 4,
+    marginTop: 2,
   },
   subtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 15,
-    marginTop: 6,
+    marginTop: 2,
     lineHeight: 22,
   },
   cards: {
@@ -165,29 +183,34 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   text: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   cardTitle: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 17,
   },
   cardDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    lineHeight: 18,
+    lineHeight: 19,
   },
 });
