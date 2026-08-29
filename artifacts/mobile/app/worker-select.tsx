@@ -13,54 +13,39 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, type User } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
-interface RoleOption {
-  role: User["role"];
-  label: string;
+interface WorkerOption {
+  id: string;
+  name: string;
+  jobType: string;
+  phone: string;
   icon: keyof typeof Feather.glyphMap;
-  description: string;
-  user: User;
 }
 
-const BASE = { business: "lawn", phone: "9876543210" };
-
-const ROLES: RoleOption[] = [
-  {
-    role: "owner",
-    label: "Super Admin",
-    icon: "shield",
-    description: "Full oversight of the lawn operation",
-    user: { id: "lawn-admin", name: "Ravi Kumar", role: "owner", ...BASE },
-  },
-  {
-    role: "manager",
-    label: "Manager",
-    icon: "briefcase",
-    description: "Manage workers and daily operations",
-    user: { id: "lawn-manager", name: "Sunita Devi", role: "manager", ...BASE },
-  },
-  {
-    role: "employee",
-    label: "Worker",
-    icon: "user",
-    description: "Complete daily tasks and upload proof",
-    user: { id: "lawn-worker", name: "Worker", role: "employee", ...BASE, jobType: "" },
-  },
+const WORKERS: WorkerOption[] = [
+  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", icon: "wind" },
+  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", icon: "coffee" },
+  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", icon: "droplet" },
+  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", icon: "box" },
+  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", icon: "droplet" },
 ];
 
-export default function RoleSelectScreen() {
+export default function WorkerSelectScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
   const params = useLocalSearchParams<{ business?: string }>();
   const businessId = params.business ?? "lawn";
-  const businessName = businessId === "lawn" ? "Lawn Care" : businessId;
 
-  const handleSelect = async (option: RoleOption) => {
-    if (option.role === "employee") {
-      router.push({ pathname: "/worker-select", params: { business: businessId } });
-      return;
-    }
-    await login({ ...option.user, business: businessId });
+  const handleSelect = async (worker: WorkerOption) => {
+    const user: User = {
+      id: worker.id,
+      name: worker.name,
+      role: "employee",
+      business: businessId,
+      jobType: worker.jobType,
+      phone: worker.phone,
+    };
+    await login(user);
     router.replace("/(app)");
   };
 
@@ -74,23 +59,23 @@ export default function RoleSelectScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: colors.gold }]}>{businessName}</Text>
+        <Text style={[styles.eyebrow, { color: colors.gold }]}>Lawn Care</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Select your role
+          Select worker
         </Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Choose the account you want to use today.
+          Choose your name to see today's tasks.
         </Text>
       </View>
 
       <View style={styles.cards}>
-        {ROLES.map((option, index) => (
+        {WORKERS.map((worker, index) => (
           <Animated.View
-            key={option.role}
-            entering={FadeInUp.delay(index * 90).duration(450).springify()}
+            key={worker.id}
+            entering={FadeInUp.delay(index * 70).duration(400).springify()}
           >
             <Pressable
-              onPress={() => handleSelect(option)}
+              onPress={() => handleSelect(worker)}
               style={[
                 styles.card,
                 {
@@ -105,14 +90,14 @@ export default function RoleSelectScreen() {
                   { backgroundColor: `${colors.gold}18` },
                 ]}
               >
-                <Feather name={option.icon} size={28} color={colors.gold} />
+                <Feather name={worker.icon} size={24} color={colors.gold} />
               </View>
               <View style={styles.text}>
                 <Text style={[styles.cardTitle, { color: colors.cardForeground }]}>
-                  {option.label}
+                  {worker.name}
                 </Text>
-                <Text style={[styles.cardDesc, { color: colors.mutedForeground }]}>
-                  {option.description}
+                <Text style={[styles.cardRole, { color: colors.mutedForeground }]}>
+                  {worker.jobType}
                 </Text>
               </View>
               <Feather name="chevron-right" size={22} color={colors.mutedForeground} />
@@ -155,14 +140,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   cards: {
-    gap: 14,
+    gap: 12,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    padding: 18,
-    borderRadius: 20,
+    padding: 16,
+    borderRadius: 18,
     borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -171,9 +156,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -185,9 +170,8 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 17,
   },
-  cardDesc: {
+  cardRole: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    lineHeight: 18,
   },
 });
