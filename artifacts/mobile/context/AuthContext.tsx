@@ -19,6 +19,9 @@ export interface User {
   avatar?: string;
   score?: number;
   employeeId?: string;
+  business?: string;
+  jobType?: string;
+  phone?: string;
 }
 
 interface AuthContextType {

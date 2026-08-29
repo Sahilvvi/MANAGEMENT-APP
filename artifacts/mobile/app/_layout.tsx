@@ -25,17 +25,12 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false, animation: "fade" }} />
-      <Stack.Screen
-        name="vertical/[id]"
-        options={{
-          headerShown: false,
-          animation: "slide_from_right",
-          presentation: "card",
-        }}
-      />
+    <Stack initialRouteName="onboarding" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
+      <Stack.Screen name="business" options={{ headerShown: false, animation: "slide_from_right" }} />
+      <Stack.Screen name="login" options={{ headerShown: false, animation: "slide_from_right" }} />
+      <Stack.Screen name="worker-select" options={{ headerShown: false, animation: "slide_from_right" }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
       <Stack.Screen
         name="notifications"
         options={{

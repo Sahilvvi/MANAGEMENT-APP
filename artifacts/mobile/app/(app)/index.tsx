@@ -1,0 +1,52 @@
+import { router } from "expo-router";
+import React, { useEffect } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "@/context/AuthContext";
+import { useColors } from "@/hooks/useColors";
+
+export default function OverviewScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.role === "employee") {
+      router.replace("/tasks");
+    } else if (user?.role === "manager") {
+      router.replace("/workers");
+    }
+  }, [user]);
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background, paddingTop: insets.top + 24 },
+      ]}
+    >
+      <Text style={[styles.title, { color: colors.foreground }]}>
+        Overview
+      </Text>
+      <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+        Welcome, {user?.name ?? "Admin"}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  title: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 28,
+  },
+  subtitle: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    marginTop: 8,
+  },
+});
