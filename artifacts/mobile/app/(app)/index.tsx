@@ -14,7 +14,9 @@ export default function OverviewScreen() {
   const { tasks, workers, issues } = useData();
 
   useEffect(() => {
-    if (user?.role === "manager") {
+    if (user?.role === "employee") {
+      router.replace("/tasks");
+    } else if (user?.role === "manager") {
       router.replace("/workers");
     }
   }, [user]);
