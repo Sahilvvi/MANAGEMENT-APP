@@ -12,60 +12,35 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useAuth, type User } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 
-interface RoleOption {
-  role: User["role"];
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-  description: string;
-  accent: [string, string];
-  user: User;
-}
+const ICONS: Record<string, keyof typeof Feather.glyphMap> = {
+  Sweeper: "wind",
+  Cook: "coffee",
+  "Cleaner A": "droplet",
+  Multitasker: "box",
+  "Cleaner B": "droplet",
+};
 
-const BASE = { business: "lawn", phone: "9876543210" };
-
-const ROLES: RoleOption[] = [
-  {
-    role: "owner",
-    label: "Super Admin",
-    icon: "shield",
-    description: "Full oversight of the lawn operation",
-    accent: ["#C9A84C", "#E8D59A"],
-    user: { id: "lawn-admin", name: "Ravi Kumar", role: "owner", ...BASE },
-  },
-  {
-    role: "manager",
-    label: "Manager",
-    icon: "briefcase",
-    description: "Manage workers and daily operations",
-    accent: ["#0A84FF", "#5AC8FA"],
-    user: { id: "lawn-manager", name: "Sunita Devi", role: "manager", ...BASE },
-  },
-  {
-    role: "employee",
-    label: "Worker",
-    icon: "user",
-    description: "Complete daily tasks and upload proof",
-    accent: ["#34C759", "#8CEF99"],
-    user: { id: "lawn-worker", name: "Worker", role: "employee", ...BASE, jobType: "" },
-  },
-];
-
-export default function RoleSelectScreen() {
+export default function WorkerSelectScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
+  const { workers } = useData();
   const params = useLocalSearchParams<{ business?: string }>();
   const businessId = params.business ?? "lawn";
-  const businessName = businessId === "lawn" ? "Lawn Care" : businessId;
 
-  const handleSelect = async (option: RoleOption) => {
-    if (option.role === "employee") {
-      router.push({ pathname: "/worker-select", params: { business: businessId } });
-      return;
-    }
-    await login({ ...option.user, business: businessId });
+  const handleSelect = async (worker: (typeof workers)[0]) => {
+    const user: User = {
+      id: worker.id,
+      name: worker.name,
+      role: "employee",
+      business: businessId,
+      jobType: worker.jobType,
+      phone: worker.phone,
+    };
+    await login(user);
     router.replace("/(app)");
   };
 
@@ -80,29 +55,29 @@ export default function RoleSelectScreen() {
     >
       <View style={styles.header}>
         <LinearGradient
-          colors={[colors.gold, colors.goldLight]}
+          colors={[colors.success, "#8CEF99"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.badge}
         >
-          <Text style={styles.badgeText}>{businessName}</Text>
+          <Text style={styles.badgeText}>Lawn Care</Text>
         </LinearGradient>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Who is using the app today?
+          Select your profile
         </Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Select your role to access the right dashboard.
+          Tap your name to see today’s tasks and upload proof.
         </Text>
       </View>
 
       <View style={styles.cards}>
-        {ROLES.map((option, index) => (
+        {workers.map((worker, index) => (
           <Animated.View
-            key={option.role}
-            entering={FadeInUp.delay(index * 90).duration(450).springify()}
+            key={worker.id}
+            entering={FadeInUp.delay(index * 70).duration(400).springify()}
           >
             <Pressable
-              onPress={() => handleSelect(option)}
+              onPress={() => handleSelect(worker)}
               style={[
                 styles.card,
                 {
@@ -112,19 +87,23 @@ export default function RoleSelectScreen() {
               ]}
             >
               <LinearGradient
-                colors={option.accent}
+                colors={[colors.gold, colors.goldLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.iconCircle}
               >
-                <Feather name={option.icon} size={26} color="#FFF" />
+                <Feather
+                  name={ICONS[worker.jobType] ?? "user"}
+                  size={24}
+                  color={colors.primary}
+                />
               </LinearGradient>
               <View style={styles.text}>
                 <Text style={[styles.cardTitle, { color: colors.cardForeground }]}>
-                  {option.label}
+                  {worker.name}
                 </Text>
-                <Text style={[styles.cardDesc, { color: colors.mutedForeground }]}>
-                  {option.description}
+                <Text style={[styles.cardRole, { color: colors.mutedForeground }]}>
+                  {worker.jobType} · {worker.phone}
                 </Text>
               </View>
               <Feather name="chevron-right" size={22} color={colors.mutedForeground} />
@@ -173,13 +152,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   cards: {
-    gap: 14,
+    gap: 12,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    padding: 18,
+    padding: 16,
     borderRadius: 20,
     borderWidth: 1,
     shadowColor: "#000",
@@ -189,9 +168,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -208,9 +187,8 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 17,
   },
-  cardDesc: {
+  cardRole: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    lineHeight: 19,
   },
 });

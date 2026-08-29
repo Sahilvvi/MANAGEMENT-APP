@@ -27,17 +27,57 @@ export interface Employee {
   bonus: number;
 }
 
+export interface Business {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export interface Worker {
+  id: string;
+  name: string;
+  jobType: string;
+  phone: string;
+  business: string;
+  salary: number;
+  joinDate: string;
+  address: string;
+  attendance: "present" | "absent" | "late";
+  avatar?: string;
+}
+
+export interface Manager {
+  id: string;
+  name: string;
+  phone: string;
+  business: string;
+  salary: number;
+  joinDate: string;
+  address: string;
+  attendance: "present" | "absent" | "late";
+  avatar?: string;
+}
+
+export type TaskRecurrence = "once" | "daily" | "weekly" | "monthly";
+export type TaskStatus = "pending" | "in_progress" | "completed" | "overdue";
+export type TaskPriority = "low" | "medium" | "high" | "critical";
+
 export interface Task {
   id: string;
   title: string;
   description: string;
   assigneeId: string;
   assigneeName: string;
-  vertical: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "pending" | "in_progress" | "completed" | "overdue";
+  business: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  recurrence: TaskRecurrence;
   dueDate: string;
   createdAt: string;
+  completedAt?: string;
+  completionPhoto?: string;
+  assignedBy?: string;
 }
 
 export interface Asset {
@@ -76,20 +116,42 @@ export interface Incident {
   date: string;
 }
 
+export interface Issue {
+  id: string;
+  title: string;
+  description: string;
+  cost: number;
+  reportedBy: string;
+  status: "open" | "approved" | "rejected" | "resolved";
+  business: string;
+  date: string;
+  photo?: string;
+}
+
 interface DataContextType {
+  // legacy
   verticals: Vertical[];
   employees: Employee[];
-  tasks: Task[];
   assets: Asset[];
   finance: FinanceEntry[];
   incidents: Incident[];
-  addTask: (task: Omit<Task, "id" | "createdAt">) => Promise<void>;
-  updateTaskStatus: (id: string, status: Task["status"]) => Promise<void>;
   addFinanceEntry: (entry: Omit<FinanceEntry, "id">) => Promise<void>;
   addIncident: (incident: Omit<Incident, "id" | "date">) => Promise<void>;
   checkIn: (employeeId: string) => Promise<void>;
   totalRevenue: number;
   totalExpenses: number;
+
+  // lawn
+  businesses: Business[];
+  workers: Worker[];
+  managers: Manager[];
+  tasks: Task[];
+  issues: Issue[];
+  addTask: (task: Omit<Task, "id" | "createdAt">) => Promise<void>;
+  updateTaskStatus: (id: string, status: Task["status"]) => Promise<void>;
+  completeTask: (id: string, photoBase64?: string) => Promise<void>;
+  addIssue: (issue: Omit<Issue, "id" | "date">) => Promise<void>;
+  updateIssueStatus: (id: string, status: Issue["status"]) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType>({} as DataContextType);
@@ -119,17 +181,6 @@ const EMPLOYEES: Employee[] = [
   { id: "e10", name: "Meena Krishnan", role: "Accountant", department: "Finance", vertical: "corporate", score: 91, attendance: "present", checkInTime: "08:10", location: "Finance Wing", fines: 0, bonus: 600 },
 ];
 
-const TASKS: Task[] = [
-  { id: "t1", title: "Equipment maintenance check", description: "Monthly check on all ICU equipment", assigneeId: "e1", assigneeName: "Arjun Sharma", vertical: "healthcare", priority: "high", status: "in_progress", dueDate: "2026-05-03", createdAt: "2026-04-28" },
-  { id: "t2", title: "Safety inspection report", description: "Submit Q2 safety inspection for shaft 3", assigneeId: "e4", assigneeName: "Sneha Patel", vertical: "mining", priority: "critical", status: "pending", dueDate: "2026-05-04", createdAt: "2026-04-29" },
-  { id: "t3", title: "Crop yield assessment", description: "Document yield from north farm sector", assigneeId: "e3", assigneeName: "Rahul Gupta", vertical: "agriculture", priority: "medium", status: "in_progress", dueDate: "2026-05-05", createdAt: "2026-04-27" },
-  { id: "t4", title: "Client presentation prep", description: "Prepare Q2 report for key clients", assigneeId: "e7", assigneeName: "Rohan Mehta", vertical: "corporate", priority: "high", status: "pending", dueDate: "2026-05-06", createdAt: "2026-04-30" },
-  { id: "t5", title: "Lease renewal follow-ups", description: "Follow up on 8 expiring leases", assigneeId: "e8", assigneeName: "Kavitha Iyer", vertical: "realestate", priority: "medium", status: "completed", dueDate: "2026-05-01", createdAt: "2026-04-25" },
-  { id: "t6", title: "Pipeline pressure review", description: "Inspect pressure readings on pipeline B", assigneeId: "e2", assigneeName: "Priya Nair", vertical: "petroleum", priority: "critical", status: "overdue", dueDate: "2026-05-01", createdAt: "2026-04-26" },
-  { id: "t7", title: "Feature deployment", description: "Deploy v2.3 to production environment", assigneeId: "e9", assigneeName: "Deepak Joshi", vertical: "technology", priority: "high", status: "in_progress", dueDate: "2026-05-07", createdAt: "2026-04-30" },
-  { id: "t8", title: "Menu revision", description: "Update seasonal menu items", assigneeId: "e5", assigneeName: "Vikram Reddy", vertical: "hospitality", priority: "low", status: "pending", dueDate: "2026-05-10", createdAt: "2026-05-01" },
-];
-
 const ASSETS: Asset[] = [
   { id: "a1", name: "MRI Machine Unit 1", type: "fixed", category: "Medical Equipment", location: "Radiology Dept", status: "operational", lastMaintenance: "2026-03-15", nextMaintenance: "2026-06-15", value: 1800000, vertical: "healthcare" },
   { id: "a2", name: "Drilling Rig Alpha", type: "fixed", category: "Drilling Equipment", location: "Site B", status: "maintenance", lastMaintenance: "2026-04-01", nextMaintenance: "2026-05-01", value: 5200000, vertical: "petroleum" },
@@ -156,19 +207,109 @@ const INCIDENTS: Incident[] = [
   { id: "i3", title: "HVAC malfunction", description: "HVAC unit in ward 3 showing error codes", reportedBy: "Arjun Sharma", vertical: "healthcare", severity: "medium", status: "open", date: "2026-05-02" },
 ];
 
+const BUSINESSES: Business[] = [
+  { id: "lawn", name: "Lawn Care", icon: "scissors", color: "#34C759" },
+];
+
+const WORKERS: Worker[] = [
+  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", business: "lawn", salary: 12000, joinDate: "2023-04-15", address: "Village Green, Near Main Gate, Lucknow", attendance: "present" },
+  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", business: "lawn", salary: 15000, joinDate: "2023-05-10", address: "Plot 12, Staff Quarters, Lucknow", attendance: "present" },
+  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", business: "lawn", salary: 13000, joinDate: "2023-06-01", address: "House 4, Green Park Colony, Lucknow", attendance: "late" },
+  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", business: "lawn", salary: 14000, joinDate: "2023-07-20", address: "Sector 7, Workers Lane, Lucknow", attendance: "present" },
+  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", business: "lawn", salary: 12500, joinDate: "2024-01-08", address: "Near Workshop, Lawn Campus, Lucknow", attendance: "present" },
+];
+
+const MANAGERS: Manager[] = [
+  { id: "lawn-m1", name: "Sunita Devi", phone: "9876543200", business: "lawn", salary: 28000, joinDate: "2022-11-20", address: "Manager Residence, Lawn Care Office, Lucknow", attendance: "present" },
+];
+
+function isoDate(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().split("T")[0];
+}
+
+const today = isoDate(0);
+const yesterday = isoDate(-1);
+
+const LAWN_TASKS: Task[] = [
+  // Sweeper
+  { id: "lt1", title: "Sweep all pathways", description: "Remove leaves and debris from main walkways and parking area.", assigneeId: "lawn-w1", assigneeName: "Raju", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
+  { id: "lt2", title: "Pre-shift pathway check", description: "Quick sweep around entrance gates.", assigneeId: "lawn-w1", assigneeName: "Raju", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
+  // Cook
+  { id: "lt3", title: "Prepare team lunch", description: "Cook and pack lunch for the lawn crew.", assigneeId: "lawn-w2", assigneeName: "Lakhan", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
+  { id: "lt4", title: "Clean kitchen area", description: "Wipe counters and store leftover ingredients.", assigneeId: "lawn-w2", assigneeName: "Lakhan", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
+  // Cleaner A
+  { id: "lt5", title: "Mop pavilion floor", description: "Mop and disinfect the pavilion seating area.", assigneeId: "lawn-w3", assigneeName: "Prem", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
+  { id: "lt6", title: "Dust outdoor furniture", description: "Wipe down tables and benches.", assigneeId: "lawn-w3", assigneeName: "Prem", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
+  // Multitasker
+  { id: "lt7", title: "Collect garden waste", description: "Gather trimmed branches and leaves into compost bins.", assigneeId: "lawn-w4", assigneeName: "Kishan", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
+  { id: "lt8", title: "Assist equipment move", description: "Help move sprinklers and hoses.", assigneeId: "lawn-w4", assigneeName: "Kishan", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
+  // Cleaner B
+  { id: "lt9", title: "Clean washrooms", description: "Scrub and restock all washrooms.", assigneeId: "lawn-w5", assigneeName: "Suresh", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
+  { id: "lt10", title: "Refill supplies", description: "Restock soap, towels, and bin liners.", assigneeId: "lawn-w5", assigneeName: "Suresh", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
+];
+
+const ISSUES: Issue[] = [
+  { id: "iss1", title: "Broken sprinkler", description: "South lawn sprinkler head is leaking and needs replacement.", cost: 450, reportedBy: "Sunita Devi", status: "open", business: "lawn", date: yesterday },
+];
+
+const STORAGE_KEY = "@lawn_data";
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(TASKS);
+  const [tasks, setTasks] = useState<Task[]>(LAWN_TASKS);
   const [finance, setFinance] = useState<FinanceEntry[]>(FINANCE);
   const [incidents, setIncidents] = useState<Incident[]>(INCIDENTS);
   const [employees, setEmployees] = useState<Employee[]>(EMPLOYEES);
+  const [issues, setIssues] = useState<Issue[]>(ISSUES);
+
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.tasks) setTasks(parsed.tasks);
+          if (parsed.issues) setIssues(parsed.issues);
+        } catch {}
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, issues }));
+  }, [tasks, issues]);
 
   const addTask = async (task: Omit<Task, "id" | "createdAt">) => {
-    const newTask: Task = { ...task, id: Date.now().toString(), createdAt: new Date().toISOString().split("T")[0] };
+    const newTask: Task = {
+      ...task,
+      id: `lt${Date.now()}`,
+      createdAt: isoDate(0),
+    };
     setTasks((prev) => [newTask, ...prev]);
   };
 
   const updateTaskStatus = async (id: string, status: Task["status"]) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  };
+
+  const completeTask = async (id: string, photoBase64?: string) => {
+    const now = isoDate(0);
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, status: "completed", completedAt: now, completionPhoto: photoBase64 }
+          : t
+      )
+    );
+  };
+
+  const addIssue = async (issue: Omit<Issue, "id" | "date">) => {
+    const newIssue: Issue = { ...issue, id: `iss${Date.now()}`, date: isoDate(0) };
+    setIssues((prev) => [newIssue, ...prev]);
+  };
+
+  const updateIssueStatus = async (id: string, status: Issue["status"]) => {
+    setIssues((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
   };
 
   const addFinanceEntry = async (entry: Omit<FinanceEntry, "id">) => {
@@ -177,7 +318,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addIncident = async (incident: Omit<Incident, "id" | "date">) => {
-    const newIncident: Incident = { ...incident, id: Date.now().toString(), date: new Date().toISOString().split("T")[0] };
+    const newIncident: Incident = { ...incident, id: Date.now().toString(), date: isoDate(0) };
     setIncidents((prev) => [newIncident, ...prev]);
   };
 
@@ -199,17 +340,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       value={{
         verticals: VERTICALS,
         employees,
-        tasks,
         assets: ASSETS,
         finance,
         incidents,
-        addTask,
-        updateTaskStatus,
         addFinanceEntry,
         addIncident,
         checkIn,
         totalRevenue,
         totalExpenses,
+
+        businesses: BUSINESSES,
+        workers: WORKERS,
+        managers: MANAGERS,
+        tasks,
+        issues,
+        addTask,
+        updateTaskStatus,
+        completeTask,
+        addIssue,
+        updateIssueStatus,
       }}
     >
       {children}
