@@ -91,7 +91,7 @@ export default function ManagerDetailScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16 }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       <Pressable onPress={() => router.back()} style={styles.backLink}>
@@ -223,10 +223,11 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 24,
     gap: 16,
   },
   center: {

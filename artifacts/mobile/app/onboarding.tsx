@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
         </Animated.View>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
             <View
@@ -169,7 +169,6 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   footer: {
-    paddingBottom: 32,
     gap: 24,
   },
   dots: {

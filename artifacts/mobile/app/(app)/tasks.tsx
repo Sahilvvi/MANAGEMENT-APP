@@ -265,7 +265,7 @@ export default function TasksScreen() {
         data={filteredTasks}
         keyExtractor={(t) => t.id}
         renderItem={renderTask}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: colors.mutedForeground }]}>
@@ -384,7 +384,12 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
+  },
+  list: {
+    paddingBottom: 0,
+    gap: 12,
   },
   header: {
     flexDirection: "row",
@@ -442,10 +447,6 @@ const styles = StyleSheet.create({
   filterText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 13,
-  },
-  list: {
-    paddingBottom: 24,
-    gap: 12,
   },
   card: {
     borderRadius: 20,

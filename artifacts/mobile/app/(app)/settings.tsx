@@ -66,7 +66,7 @@ export default function SettingsScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top + 20 },
       ]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
@@ -108,10 +108,11 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 24,
     gap: 16,
   },
   title: {

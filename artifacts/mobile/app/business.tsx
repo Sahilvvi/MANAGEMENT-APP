@@ -162,7 +162,7 @@ export default function BusinessSelectScreen() {
         keyExtractor={(b) => b.id}
         numColumns={2}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -172,6 +172,7 @@ export default function BusinessSelectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
   },
   header: {
@@ -196,7 +197,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   list: {
-    paddingBottom: 32,
     gap: 14,
   },
   cardWrapper: {

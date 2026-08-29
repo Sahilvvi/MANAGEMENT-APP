@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, type UserRole } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -41,6 +42,7 @@ const INITIAL_ROUTE: Record<UserRole, string> = {
 export default function AppLayout() {
   const { user, isLoading } = useAuth();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
 
   if (isLoading) {
@@ -70,8 +72,10 @@ export default function AppLayout() {
           backgroundColor: colors.card,
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
-          height: isWeb ? 60 : 70,
-          paddingBottom: isWeb ? 8 : 10,
+          paddingBottom: isWeb ? 8 : insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+          minHeight: isWeb ? 60 : 70,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
