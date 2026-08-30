@@ -96,7 +96,7 @@ export default function WorkersScreen() {
         data={workerStats}
         keyExtractor={(w) => w.id}
         renderItem={renderWorker}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -106,7 +106,12 @@ export default function WorkersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
+  },
+  list: {
+    paddingBottom: 0,
+    gap: 12,
   },
   title: {
     fontFamily: "Inter_700Bold",
@@ -133,10 +138,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 15,
     paddingVertical: 0,
-  },
-  list: {
-    paddingBottom: 24,
-    gap: 12,
   },
   card: {
     borderRadius: 20,

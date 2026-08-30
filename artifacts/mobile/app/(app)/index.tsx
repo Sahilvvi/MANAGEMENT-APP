@@ -101,7 +101,7 @@ export default function OverviewScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top + 16 },
       ]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       <Animated.View entering={FadeInUp.duration(500)}>
@@ -232,10 +232,11 @@ export default function OverviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 20,
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 24,
     gap: 18,
   },
   hero: {

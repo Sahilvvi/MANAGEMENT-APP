@@ -50,7 +50,7 @@ export default function WorkerSelectScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top },
       ]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
@@ -118,10 +118,11 @@ export default function WorkerSelectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 24,
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   header: {
     paddingTop: 28,

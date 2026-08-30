@@ -1,12 +1,17 @@
 {
   "expo": {
-    "name": "Enterprise Ops Hub",
-    "slug": "mobile",
+    "name": "DADASHRIVISHWA",
+    "slug": "dadashrivishwa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
-    "userInterfaceStyle": "light",
+    "scheme": "dadashrivishwa",
+    "userInterfaceStyle": "automatic",
+    "androidStatusBar": {
+      "backgroundColor": "#0A1628",
+      "translucent": true,
+      "barStyle": "light-content"
+    },
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",

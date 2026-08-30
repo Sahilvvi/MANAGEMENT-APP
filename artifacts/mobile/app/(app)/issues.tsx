@@ -161,7 +161,7 @@ export default function IssuesScreen() {
         data={filteredIssues}
         keyExtractor={(i) => i.id}
         renderItem={renderIssue}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: colors.mutedForeground }]}>
@@ -256,7 +256,12 @@ export default function IssuesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     paddingHorizontal: 24,
+  },
+  list: {
+    paddingBottom: 0,
+    gap: 12,
   },
   header: {
     flexDirection: "row",
@@ -279,10 +284,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-  },
-  list: {
-    paddingBottom: 24,
-    gap: 12,
   },
   card: {
     borderRadius: 18,
