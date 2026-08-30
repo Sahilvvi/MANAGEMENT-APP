@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo } from "react";
 import {
@@ -88,12 +87,12 @@ export default function OverviewScreen() {
 
   const priorityData = useMemo(() => {
     return [
-      { label: "Completed", value: completed, color: ["#34C759", "#8CEF99"] as [string, string] },
-      { label: "Pending", value: pending, color: ["#FF9500", "#FFD285"] as [string, string] },
-      { label: "In Progress", value: inProgress, color: ["#0A84FF", "#5AC8FA"] as [string, string] },
-      { label: "Overdue", value: overdue, color: ["#FF3B30", "#FF8A80"] as [string, string] },
+      { label: "Completed", value: completed, color: colors.success },
+      { label: "Pending", value: pending, color: colors.warning },
+      { label: "In Progress", value: inProgress, color: colors.primary },
+      { label: "Overdue", value: overdue, color: colors.destructive },
     ];
-  }, [completed, pending, inProgress, overdue]);
+  }, [completed, pending, inProgress, overdue, colors]);
 
   return (
     <ScrollView
@@ -101,22 +100,17 @@ export default function OverviewScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top + 16 },
       ]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24, gap: 16 }}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View entering={FadeInUp.duration(500)}>
-        <LinearGradient
-          colors={[colors.navy, colors.navyLight]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
+      <Animated.View entering={FadeInUp.duration(450)}>
+        <View style={[styles.hero, { backgroundColor: colors.primary }]}>
           <View style={styles.heroHeader}>
             <View>
               <Text style={styles.heroGreeting}>Welcome back,</Text>
               <Text style={styles.heroName}>{user?.name ?? "Admin"}</Text>
             </View>
-            <View style={[styles.avatar, { backgroundColor: colors.gold }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.primaryForeground }]}>
               <Feather name="user" size={22} color={colors.primary} />
             </View>
           </View>
@@ -127,12 +121,12 @@ export default function OverviewScreen() {
             </View>
             <SparklineChart
               data={trend.map((d) => d.value)}
-              color={colors.gold}
+              color={colors.primaryForeground}
               height={48}
               gap={4}
             />
           </View>
-        </LinearGradient>
+        </View>
       </Animated.View>
 
       <View style={styles.statsGrid}>
@@ -141,7 +135,7 @@ export default function OverviewScreen() {
           value={workers.length.toString()}
           subLabel={`${workers.filter((w) => w.attendance === "present").length} present`}
           icon="users"
-          iconColor={colors.gold}
+          iconColor={colors.primary}
         />
         <MetricCard
           label="Total tasks"
@@ -166,17 +160,17 @@ export default function OverviewScreen() {
         />
       </View>
 
-      <Animated.View entering={FadeInUp.delay(150).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Animated.View entering={FadeInUp.delay(120).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Task status" subtitle="Current task breakdown" icon="pie-chart" />
         <BarChart data={priorityData} height={150} />
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(250).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Animated.View entering={FadeInUp.delay(220).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Completion trend" subtitle="Last 7 days" icon="activity" />
-        <BarChart data={trend.map((d) => ({ ...d, color: [colors.gold, colors.goldLight] as [string, string] }))} height={140} />
+        <BarChart data={trend.map((d) => ({ ...d, color: colors.primary }))} height={140} />
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(350).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Animated.View entering={FadeInUp.delay(320).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Top performers" subtitle="By completion rate" icon="award" />
         <View style={styles.topList}>
           {topWorkers.map((worker, index) => (
@@ -185,8 +179,8 @@ export default function OverviewScreen() {
               onPress={() => router.push({ pathname: "/workers/[id]", params: { id: worker.id } })}
               style={[styles.topItem, { borderColor: colors.border }]}
             >
-              <View style={[styles.rank, { backgroundColor: index === 0 ? colors.gold + "25" : colors.muted }]}>
-                <Text style={[styles.rankText, { color: index === 0 ? colors.gold : colors.mutedForeground }]}>
+              <View style={[styles.rank, { backgroundColor: index === 0 ? colors.primary + "15" : colors.muted }]}>
+                <Text style={[styles.rankText, { color: index === 0 ? colors.primary : colors.mutedForeground }]}>
                   #{index + 1}
                 </Text>
               </View>
@@ -202,7 +196,7 @@ export default function OverviewScreen() {
         </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(450).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Animated.View entering={FadeInUp.delay(420).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Recent issues" subtitle="Needs your attention" icon="alert-triangle" />
         {recentIssues.length === 0 ? (
           <Text style={[styles.empty, { color: colors.mutedForeground }]}>No issues reported.</Text>
@@ -235,18 +229,14 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
   },
-  content: {
-    paddingBottom: 24,
-    gap: 18,
-  },
   hero: {
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 22,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   heroHeader: {
     flexDirection: "row",
@@ -257,7 +247,7 @@ const styles = StyleSheet.create({
   heroGreeting: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: "rgba(255,255,255,0.75)",
+    color: "rgba(255,255,255,0.8)",
   },
   heroName: {
     fontFamily: "Inter_700Bold",
@@ -285,7 +275,7 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.75)",
     marginTop: 2,
   },
   statsGrid: {
@@ -294,14 +284,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   topList: {
     gap: 10,
@@ -311,7 +301,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     padding: 12,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
   },
   rank: {

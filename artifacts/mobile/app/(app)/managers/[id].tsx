@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useMemo } from "react";
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,8 +13,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { BarChart } from "@/components/BarChart";
 import { CircularScore } from "@/components/CircularScore";
+import { ScoreBadge } from "@/components/ScoreBadge";
 import { SectionHeader } from "@/components/SectionHeader";
-import { useData, type Task } from "@/context/DataContext";
+import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 
 function isoDate(offsetDays = 0) {
@@ -34,64 +36,78 @@ function startDate(daysBack: number) {
   return d.toISOString().split("T")[0];
 }
 
-function statsFor(tasks: Task[], days: number) {
-  const start = startDate(days);
-  const today = isoDate(0);
-  const periodTasks = tasks.filter(
-    (t) => (t.dueDate >= start && t.dueDate <= today) || (t.createdAt >= start && t.createdAt <= today)
-  );
-  const completed = periodTasks.filter((t) => t.status === "completed").length;
-  const total = periodTasks.length || 1;
-  return {
-    completed,
-    total: periodTasks.length,
-    rate: Math.round((completed / total) * 100),
-  };
-}
-
 export default function ManagerDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { managers, tasks, issues, workers } = useData();
+  const { managers, workers, tasks, issues } = useData();
 
   const manager = managers.find((m) => m.id === id);
-  const managerTasks = useMemo(() => tasks.filter((t) => t.assignedBy === manager?.name || t.assignedBy === "Sunita Devi"), [tasks, manager?.name]);
-  const reportedIssues = useMemo(() => issues.filter((i) => i.reportedBy === manager?.name || i.reportedBy === "Sunita Devi"), [issues, manager?.name]);
-  const team = useMemo(() => workers.filter((w) => w.business === "lawn"), [workers]);
+
+  const teamTasks = useMemo(
+    () => tasks.filter((t) => t.assignedBy === manager?.name || t.assignedBy === "Sunita Devi"),
+    [tasks, manager?.name]
+  );
+
+  const teamWorkers = useMemo(
+    () => workers.filter((w) => w.managerId === id),
+    [workers, id]
+  );
+
+  const teamWorkerIds = useMemo(
+    () => new Set(teamWorkers.map((w) => w.id)),
+    [teamWorkers]
+  );
+
+  const managedTasks = useMemo(
+    () => teamTasks.filter((t) => teamWorkerIds.has(t.assigneeId)),
+    [teamTasks, teamWorkerIds]
+  );
+
+  const completionRate = useMemo(() => {
+    const total = managedTasks.length || 1;
+    const done = managedTasks.filter((t) => t.status === "completed").length;
+    return Math.round((done / total) * 100);
+  }, [managedTasks]);
 
   const trend = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const offset = i - 6;
       return {
         label: labelFor(offset),
-        value: managerTasks.filter((t) => t.completedAt === isoDate(offset)).length,
+        value: managedTasks.filter((t) => t.completedAt === isoDate(offset)).length,
       };
     });
-  }, [managerTasks]);
+  }, [managedTasks]);
 
-  const oneDay = statsFor(managerTasks, 1);
-  const fifteenDay = statsFor(managerTasks, 15);
-  const thirtyDay = statsFor(managerTasks, 30);
+  const oneDay = { start: startDate(1), rate: rateFor(managedTasks, 1) };
+  const fifteenDay = { start: startDate(15), rate: rateFor(managedTasks, 15) };
+  const thirtyDay = { start: startDate(30), rate: rateFor(managedTasks, 30) };
+
+  const recentIssues = useMemo(
+    () =>
+      [...issues]
+        .filter((i) => i.reportedBy === manager?.name)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 4),
+    [issues, manager?.name]
+  );
 
   if (!manager) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Manager not found</Text>
-        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.gold }]}>
+        <Text style={[styles.centerTitle, { color: colors.foreground }]}>Manager not found</Text>
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.primary }]}>
           <Text style={[styles.backText, { color: colors.primaryForeground }]}>Go back</Text>
         </Pressable>
       </View>
     );
   }
 
-  const attendanceColor =
-    manager.attendance === "present" ? colors.success : manager.attendance === "late" ? colors.warning : colors.destructive;
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16 }]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       showsVerticalScrollIndicator={false}
     >
       <Pressable onPress={() => router.back()} style={styles.backLink}>
@@ -100,86 +116,74 @@ export default function ManagerDetailScreen() {
       </Pressable>
 
       <Animated.View entering={FadeInUp.duration(450)} style={[styles.headerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.avatar, { backgroundColor: colors.gold + "20" }]}>
-          <Feather name="briefcase" size={32} color={colors.gold} />
+        <View style={[styles.avatar, { backgroundColor: colors.primary + "15" }]}>
+          <Feather name="briefcase" size={32} color={colors.primary} />
         </View>
         <View style={styles.headerText}>
           <Text style={[styles.name, { color: colors.cardForeground }]}>{manager.name}</Text>
-          <Text style={[styles.role, { color: colors.mutedForeground }]}>Operations Manager</Text>
-          <View style={[styles.attendance, { backgroundColor: attendanceColor + "15" }]}>
-            <Text style={[styles.attendanceText, { color: attendanceColor }]}>Attendance: {manager.attendance}</Text>
-          </View>
+          <Text style={[styles.role, { color: colors.mutedForeground }]}>Lawn Manager</Text>
+          <Text style={[styles.phone, { color: colors.mutedForeground }]}>{manager.phone}</Text>
         </View>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SectionHeader title="Team performance" subtitle={`${team.length} workers under supervision`} icon="users" />
-        <View style={styles.teamGrid}>
-          <View style={[styles.teamBox, { borderColor: colors.border }]}>
-            <Text style={[styles.teamValue, { color: colors.gold }]}>{managerTasks.length}</Text>
-            <Text style={[styles.teamLabel, { color: colors.mutedForeground }]}>Tasks assigned</Text>
-          </View>
-          <View style={[styles.teamBox, { borderColor: colors.border }]}>
-            <Text style={[styles.teamValue, { color: colors.success }]}>{reportedIssues.length}</Text>
-            <Text style={[styles.teamLabel, { color: colors.mutedForeground }]}>Issues reported</Text>
-          </View>
-          <View style={[styles.teamBox, { borderColor: colors.border }]}>
-            <Text style={[styles.teamValue, { color: colors.primary }]}>{fifteenDay.rate}%</Text>
-            <Text style={[styles.teamLabel, { color: colors.mutedForeground }]}>15-day rate</Text>
-          </View>
+        <SectionHeader title="Team performance" subtitle={`${teamWorkers.length} workers`} icon="users" />
+        <View style={styles.grid}>
+          <StatBox label="Tasks assigned" value={managedTasks.length} colors={colors} />
+          <StatBox label="Completed" value={managedTasks.filter((t) => t.status === "completed").length} colors={colors} />
+          <StatBox label="Pending" value={managedTasks.filter((t) => t.status === "pending").length} colors={colors} />
         </View>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(200).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SectionHeader title="Performance snapshot" icon="bar-chart-2" />
+        <SectionHeader title="Performance snapshot" icon="pie-chart" />
         <View style={styles.scoreRow}>
           <View style={styles.scoreBox}>
-            <CircularScore score={fifteenDay.rate} size={110} />
-            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>15-day efficiency</Text>
+            <CircularScore score={oneDay.rate} size={90} />
+            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>1-day</Text>
           </View>
           <View style={styles.scoreBox}>
-            <CircularScore score={thirtyDay.rate} size={110} />
-            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>30-day efficiency</Text>
+            <CircularScore score={fifteenDay.rate} size={90} />
+            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>15-day</Text>
+          </View>
+          <View style={styles.scoreBox}>
+            <CircularScore score={thirtyDay.rate} size={90} />
+            <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>30-day</Text>
           </View>
         </View>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(300).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SectionHeader title="Last 7 days" subtitle="Tasks completed that this manager assigned" icon="activity" />
-        <BarChart data={trend.map((d) => ({ ...d, color: [colors.gold, colors.goldLight] as [string, string] }))} height={140} />
+        <SectionHeader title="Completion trend" subtitle="Team tasks completed per day" icon="activity" />
+        <BarChart data={trend.map((d) => ({ ...d, color: colors.primary }))} height={140} />
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(400).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Detailed report" subtitle="1 · 15 · 30 day summary" icon="file-text" />
         <View style={styles.reportGrid}>
-          <ReportBox label="1 day" total={oneDay.total} completed={oneDay.completed} rate={oneDay.rate} colors={colors} />
-          <ReportBox label="15 days" total={fifteenDay.total} completed={fifteenDay.completed} rate={fifteenDay.rate} colors={colors} />
-          <ReportBox label="30 days" total={thirtyDay.total} completed={thirtyDay.completed} rate={thirtyDay.rate} colors={colors} />
+          <ReportBox label="1 day" rate={oneDay.rate} count={managedTasks.filter((t) => t.completedAt && t.completedAt >= oneDay.start).length} colors={colors} />
+          <ReportBox label="15 days" rate={fifteenDay.rate} count={managedTasks.filter((t) => t.completedAt && t.completedAt >= fifteenDay.start).length} colors={colors} />
+          <ReportBox label="30 days" rate={thirtyDay.rate} count={managedTasks.filter((t) => t.completedAt && t.completedAt >= thirtyDay.start).length} colors={colors} />
         </View>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(500).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SectionHeader title="Profile details" icon="user" />
-        <InfoRow label="Phone" value={manager.phone} />
-        <InfoRow label="Salary" value={`₹${manager.salary.toLocaleString("en-IN")}/month`} />
-        <InfoRow label="Joining date" value={manager.joinDate} />
-        <InfoRow label="Address" value={manager.address} />
-      </Animated.View>
-
-      <Animated.View entering={FadeInUp.delay(600).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SectionHeader title="Recent issues reported" icon="alert-circle" />
-        {reportedIssues.length === 0 ? (
+        <SectionHeader title="Recent issues reported" icon="alert-triangle" />
+        {recentIssues.length === 0 ? (
           <Text style={[styles.empty, { color: colors.mutedForeground }]}>No issues reported.</Text>
         ) : (
-          reportedIssues.slice(0, 5).map((issue) => (
-            <View key={issue.id} style={[styles.issueRow, { borderColor: colors.border }]}>
-              <View style={[styles.issueDot, { backgroundColor: issue.status === "open" ? colors.destructive : issue.status === "approved" ? colors.success : colors.warning }]} />
-              <View style={styles.issueInfo}>
+          recentIssues.map((issue) => (
+            <View key={issue.id} style={[styles.issueItem, { borderColor: colors.border }]}>
+              <View style={styles.issueTop}>
                 <Text style={[styles.issueTitle, { color: colors.cardForeground }]}>{issue.title}</Text>
-                <Text style={[styles.issueMeta, { color: colors.mutedForeground }]}>
-                  {issue.date} · ₹{issue.cost} · {issue.status}
-                </Text>
+                <View style={[styles.issueBadge, { backgroundColor: issue.status === "open" ? colors.destructive + "15" : colors.success + "15" }]}>
+                  <Text style={[styles.issueBadgeText, { color: issue.status === "open" ? colors.destructive : colors.success }]}>{issue.status}</Text>
+                </View>
               </View>
+              <Text style={[styles.issueMeta, { color: colors.mutedForeground }]}>
+                {issue.date} · ₹{issue.cost}
+              </Text>
+              {issue.photo && <Image source={{ uri: issue.photo }} style={styles.issuePhoto} resizeMode="cover" />}
             </View>
           ))
         )}
@@ -188,34 +192,41 @@ export default function ManagerDetailScreen() {
   );
 }
 
+function rateFor(tasks: ReturnType<typeof useData>["tasks"], days: number) {
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  const startStr = start.toISOString().split("T")[0];
+  const filtered = tasks.filter((t) => t.dueDate >= startStr || t.createdAt >= startStr);
+  const total = filtered.length || 1;
+  const done = filtered.filter((t) => t.status === "completed").length;
+  return Math.round((done / total) * 100);
+}
+
+function StatBox({ label, value, colors }: { label: string; value: number; colors: ReturnType<typeof useColors> }) {
+  return (
+    <View style={[styles.statBox, { borderColor: colors.border }]}>
+      <Text style={[styles.statValue, { color: colors.primary }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
+    </View>
+  );
+}
+
 function ReportBox({
   label,
-  total,
-  completed,
   rate,
+  count,
   colors,
 }: {
   label: string;
-  total: number;
-  completed: number;
   rate: number;
+  count: number;
   colors: ReturnType<typeof useColors>;
 }) {
   return (
     <View style={[styles.reportBox, { borderColor: colors.border }]}>
       <Text style={[styles.reportLabel, { color: colors.mutedForeground }]}>{label}</Text>
-      <Text style={[styles.reportRate, { color: colors.gold }]}>{rate}%</Text>
-      <Text style={[styles.reportDetail, { color: colors.cardForeground }]}>{completed}/{total} done</Text>
-    </View>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  const colors = useColors();
-  return (
-    <View style={styles.infoRow}>
-      <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.cardForeground }]}>{value}</Text>
+      <ScoreBadge score={rate} size="lg" showLabel />
+      <Text style={[styles.reportDetail, { color: colors.cardForeground }]}>{count} completed</Text>
     </View>
   );
 }
@@ -226,15 +237,15 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
   },
-  content: {
-    paddingBottom: 24,
-    gap: 16,
-  },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
+  },
+  centerTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
   },
   backLink: {
     flexDirection: "row",
@@ -256,32 +267,30 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
   },
-  title: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-  },
   headerCard: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 20,
+    padding: 18,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 14,
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     alignItems: "center",
     justifyContent: "center",
   },
   headerText: {
-    gap: 6,
+    flex: 1,
+    gap: 3,
   },
   name: {
     fontFamily: "Inter_700Bold",
@@ -291,46 +300,42 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 14,
   },
-  attendance: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  attendanceText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 11,
-    textTransform: "capitalize",
+  phone: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 14,
   },
-  teamGrid: {
+  grid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
-  teamBox: {
+  statBox: {
     flex: 1,
+    minWidth: "28%",
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 14,
+    padding: 12,
     alignItems: "center",
     gap: 4,
   },
-  teamValue: {
+  statValue: {
     fontFamily: "Inter_700Bold",
     fontSize: 24,
   },
-  teamLabel: {
+  statLabel: {
     fontFamily: "Inter_400Regular",
-    fontSize: 11,
+    fontSize: 12,
     textAlign: "center",
   },
   scoreRow: {
@@ -341,6 +346,7 @@ const styles = StyleSheet.create({
   scoreBox: {
     alignItems: "center",
     gap: 8,
+    flex: 1,
   },
   scoreLabel: {
     fontFamily: "Inter_500Medium",
@@ -348,12 +354,14 @@ const styles = StyleSheet.create({
   },
   reportGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   reportBox: {
     flex: 1,
+    minWidth: "28%",
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 12,
     alignItems: "center",
     gap: 4,
@@ -364,58 +372,49 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  reportRate: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 26,
-  },
   reportDetail: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 13,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(0,0,0,0.06)",
-  },
-  infoLabel: {
     fontFamily: "Inter_400Regular",
-    fontSize: 14,
-  },
-  infoValue: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-    maxWidth: "60%",
-    textAlign: "right",
+    fontSize: 12,
   },
   empty: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     paddingVertical: 8,
   },
-  issueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  issueItem: {
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 4,
   },
-  issueDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  issueInfo: {
-    flex: 1,
-    gap: 2,
+  issueTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   issueTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
+    flex: 1,
+    marginRight: 8,
   },
   issueMeta: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
+  },
+  issueBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  issueBadgeText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    textTransform: "capitalize",
+  },
+  issuePhoto: {
+    width: "100%",
+    height: 150,
+    borderRadius: 10,
+    marginTop: 8,
   },
 });

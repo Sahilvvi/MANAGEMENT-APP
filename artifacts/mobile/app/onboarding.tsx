@@ -14,9 +14,9 @@ import { useColors } from "@/hooks/useColors";
 const SLIDES = [
   {
     icon: "home" as const,
-    title: "Operations Hub",
+    title: "DADASHRIVISHWA",
     description:
-      "One place to manage every location, worker, and task across your business.",
+      "Workforce management built for your lawn care operation.",
   },
   {
     icon: "check-circle" as const,
@@ -70,16 +70,16 @@ export default function OnboardingScreen() {
       <View style={styles.slideArea}>
         <Animated.View
           key={slide.title}
-          entering={FadeInUp.duration(500).springify()}
+          entering={FadeInUp.duration(450).springify()}
           style={styles.slide}
         >
           <View
             style={[
               styles.iconCircle,
-              { backgroundColor: `${colors.gold}20` },
+              { backgroundColor: colors.primary + "15" },
             ]}
           >
-            <Feather name={slide.icon} size={48} color={colors.gold} />
+            <Feather name={slide.icon} size={44} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>
             {slide.title}
@@ -99,7 +99,7 @@ export default function OnboardingScreen() {
                 styles.dot,
                 {
                   backgroundColor:
-                    i === step ? colors.gold : colors.border,
+                    i === step ? colors.primary : colors.border,
                   width: i === step ? 24 : 8,
                 },
               ]}
@@ -148,16 +148,16 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 32,
   },
   title: {
     fontFamily: "Inter_700Bold",
-    fontSize: 28,
+    fontSize: 30,
     textAlign: "center",
     marginBottom: 12,
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
   },
   buttonText: {
     fontFamily: "Inter_600SemiBold",

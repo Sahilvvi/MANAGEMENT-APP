@@ -44,6 +44,7 @@ export interface Worker {
   joinDate: string;
   address: string;
   attendance: "present" | "absent" | "late";
+  managerId?: string;
   avatar?: string;
 }
 
@@ -208,15 +209,15 @@ const INCIDENTS: Incident[] = [
 ];
 
 const BUSINESSES: Business[] = [
-  { id: "lawn", name: "Lawn Care", icon: "scissors", color: "#34C759" },
+  { id: "lawn", name: "Lawn Care", icon: "scissors", color: "#10B981" },
 ];
 
 const WORKERS: Worker[] = [
-  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", business: "lawn", salary: 12000, joinDate: "2023-04-15", address: "Village Green, Near Main Gate, Lucknow", attendance: "present" },
-  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", business: "lawn", salary: 15000, joinDate: "2023-05-10", address: "Plot 12, Staff Quarters, Lucknow", attendance: "present" },
-  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", business: "lawn", salary: 13000, joinDate: "2023-06-01", address: "House 4, Green Park Colony, Lucknow", attendance: "late" },
-  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", business: "lawn", salary: 14000, joinDate: "2023-07-20", address: "Sector 7, Workers Lane, Lucknow", attendance: "present" },
-  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", business: "lawn", salary: 12500, joinDate: "2024-01-08", address: "Near Workshop, Lawn Campus, Lucknow", attendance: "present" },
+  { id: "lawn-w1", name: "Raju", jobType: "Sweeper", phone: "9876543201", business: "lawn", salary: 12000, joinDate: "2023-04-15", address: "Village Green, Near Main Gate, Lucknow", attendance: "present", managerId: "lawn-m1" },
+  { id: "lawn-w2", name: "Lakhan", jobType: "Cook", phone: "9876543202", business: "lawn", salary: 15000, joinDate: "2023-05-10", address: "Plot 12, Staff Quarters, Lucknow", attendance: "present", managerId: "lawn-m1" },
+  { id: "lawn-w3", name: "Prem", jobType: "Cleaner A", phone: "9876543203", business: "lawn", salary: 13000, joinDate: "2023-06-01", address: "House 4, Green Park Colony, Lucknow", attendance: "late", managerId: "lawn-m1" },
+  { id: "lawn-w4", name: "Kishan", jobType: "Multitasker", phone: "9876543204", business: "lawn", salary: 14000, joinDate: "2023-07-20", address: "Sector 7, Workers Lane, Lucknow", attendance: "present", managerId: "lawn-m1" },
+  { id: "lawn-w5", name: "Suresh", jobType: "Cleaner B", phone: "9876543205", business: "lawn", salary: 12500, joinDate: "2024-01-08", address: "Near Workshop, Lawn Campus, Lucknow", attendance: "present", managerId: "lawn-m1" },
 ];
 
 const MANAGERS: Manager[] = [
@@ -232,23 +233,97 @@ function isoDate(offsetDays = 0) {
 const today = isoDate(0);
 const yesterday = isoDate(-1);
 
-const LAWN_TASKS: Task[] = [
-  // Sweeper
-  { id: "lt1", title: "Sweep all pathways", description: "Remove leaves and debris from main walkways and parking area.", assigneeId: "lawn-w1", assigneeName: "Raju", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
-  { id: "lt2", title: "Pre-shift pathway check", description: "Quick sweep around entrance gates.", assigneeId: "lawn-w1", assigneeName: "Raju", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
-  // Cook
-  { id: "lt3", title: "Prepare team lunch", description: "Cook and pack lunch for the lawn crew.", assigneeId: "lawn-w2", assigneeName: "Lakhan", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
-  { id: "lt4", title: "Clean kitchen area", description: "Wipe counters and store leftover ingredients.", assigneeId: "lawn-w2", assigneeName: "Lakhan", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
-  // Cleaner A
-  { id: "lt5", title: "Mop pavilion floor", description: "Mop and disinfect the pavilion seating area.", assigneeId: "lawn-w3", assigneeName: "Prem", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
-  { id: "lt6", title: "Dust outdoor furniture", description: "Wipe down tables and benches.", assigneeId: "lawn-w3", assigneeName: "Prem", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
-  // Multitasker
-  { id: "lt7", title: "Collect garden waste", description: "Gather trimmed branches and leaves into compost bins.", assigneeId: "lawn-w4", assigneeName: "Kishan", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
-  { id: "lt8", title: "Assist equipment move", description: "Help move sprinklers and hoses.", assigneeId: "lawn-w4", assigneeName: "Kishan", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
-  // Cleaner B
-  { id: "lt9", title: "Clean washrooms", description: "Scrub and restock all washrooms.", assigneeId: "lawn-w5", assigneeName: "Suresh", business: "lawn", priority: "high", status: "pending", recurrence: "daily", dueDate: today, createdAt: yesterday, assignedBy: "Sunita Devi" },
-  { id: "lt10", title: "Refill supplies", description: "Restock soap, towels, and bin liners.", assigneeId: "lawn-w5", assigneeName: "Suresh", business: "lawn", priority: "medium", status: "completed", recurrence: "daily", dueDate: yesterday, createdAt: yesterday, completedAt: yesterday, assignedBy: "Sunita Devi" },
-];
+const TASK_TEMPLATES: Record<string, [string, string]> = {
+  "lawn-w1": ["Sweep all pathways", "Pre-shift pathway check"],
+  "lawn-w2": ["Prepare team lunch", "Clean kitchen area"],
+  "lawn-w3": ["Mop pavilion floor", "Dust outdoor furniture"],
+  "lawn-w4": ["Collect garden waste", "Assist equipment move"],
+  "lawn-w5": ["Clean washrooms", "Refill supplies"],
+};
+
+function generateLawnTasks(): Task[] {
+  const tasks: Task[] = [];
+  let idCounter = 1;
+
+  WORKERS.forEach((worker) => {
+    const [primaryTask, secondaryTask] = TASK_TEMPLATES[worker.id];
+    for (let dayOffset = -29; dayOffset < 0; dayOffset++) {
+      const date = isoDate(dayOffset);
+      const seed = worker.id.length + dayOffset;
+      const completed1 = seed % 5 !== 0;
+      const completed2 = (seed + 1) % 5 !== 0;
+
+      tasks.push({
+        id: `lt${idCounter++}`,
+        title: primaryTask,
+        description: `Daily ${worker.jobType.toLowerCase()} work for ${date}.`,
+        assigneeId: worker.id,
+        assigneeName: worker.name,
+        business: "lawn",
+        priority: "high",
+        status: completed1 ? "completed" : "pending",
+        recurrence: "daily",
+        dueDate: date,
+        createdAt: date,
+        completedAt: completed1 ? date : undefined,
+        assignedBy: "Sunita Devi",
+      });
+
+      tasks.push({
+        id: `lt${idCounter++}`,
+        title: secondaryTask,
+        description: `Secondary ${worker.jobType.toLowerCase()} task for ${date}.`,
+        assigneeId: worker.id,
+        assigneeName: worker.name,
+        business: "lawn",
+        priority: "medium",
+        status: completed2 ? "completed" : "pending",
+        recurrence: "daily",
+        dueDate: date,
+        createdAt: date,
+        completedAt: completed2 ? date : undefined,
+        assignedBy: "Sunita Devi",
+      });
+    }
+  });
+
+  WORKERS.forEach((worker) => {
+    const [primaryTask, secondaryTask] = TASK_TEMPLATES[worker.id];
+    tasks.push({
+      id: `lt${idCounter++}`,
+      title: primaryTask,
+      description: `Daily ${worker.jobType.toLowerCase()} work for today.`,
+      assigneeId: worker.id,
+      assigneeName: worker.name,
+      business: "lawn",
+      priority: "high",
+      status: "pending",
+      recurrence: "daily",
+      dueDate: today,
+      createdAt: yesterday,
+      assignedBy: "Sunita Devi",
+    });
+    tasks.push({
+      id: `lt${idCounter++}`,
+      title: secondaryTask,
+      description: `Secondary ${worker.jobType.toLowerCase()} task for today.`,
+      assigneeId: worker.id,
+      assigneeName: worker.name,
+      business: "lawn",
+      priority: "medium",
+      status: "completed",
+      recurrence: "daily",
+      dueDate: today,
+      createdAt: yesterday,
+      completedAt: today,
+      assignedBy: "Sunita Devi",
+    });
+  });
+
+  return tasks;
+}
+
+const LAWN_TASKS: Task[] = generateLawnTasks();
 
 const ISSUES: Issue[] = [
   { id: "iss1", title: "Broken sprinkler", description: "South lawn sprinkler head is leaking and needs replacement.", cost: 450, reportedBy: "Sunita Devi", status: "open", business: "lawn", date: yesterday },

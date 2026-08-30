@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -19,14 +19,20 @@ interface SettingRowProps {
 
 function SettingRow({ icon, label, value, onPress, toggle, onToggle, destructive }: SettingRowProps) {
   const colors = useColors();
+  const iconColor = destructive ? colors.destructive : colors.primary;
   const content = (
     <View style={[styles.row, { borderBottomColor: colors.border }]}>
-      <View style={[styles.iconCircle, { backgroundColor: destructive ? colors.destructive + "15" : colors.gold + "15" }]}>
-        <Feather name={icon} size={18} color={destructive ? colors.destructive : colors.gold} />
+      <View style={[styles.iconCircle, { backgroundColor: iconColor + "12" }]}>
+        <Feather name={icon} size={18} color={iconColor} />
       </View>
       <Text style={[styles.rowLabel, { color: destructive ? colors.destructive : colors.cardForeground }]}>{label}</Text>
       {toggle !== undefined ? (
-        <Switch value={toggle} onValueChange={onToggle} />
+        <Switch
+          value={toggle}
+          onValueChange={onToggle}
+          trackColor={{ false: colors.border, true: iconColor + "80" }}
+          thumbColor={toggle ? iconColor : "#FFFFFF"}
+        />
       ) : (
         <View style={styles.rowRight}>
           {value && <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>}
@@ -62,10 +68,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
-      ]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
@@ -76,30 +79,22 @@ export default function SettingsScreen() {
         <SettingRow icon="user" label="Signed in as" value={user?.name} />
         <SettingRow icon="shield" label="Role" value={roleDisplay[user?.role ?? ""] ?? user?.role} />
         <SettingRow icon="moon" label="Dark mode" toggle={isDark} onToggle={toggle} />
-      </View>
-
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Preferences</Text>
         <SettingRow icon="bell" label="Push notifications" value="On" />
         <SettingRow icon="globe" label="Language" value="English" />
-        <SettingRow icon="smartphone" label="App version" value="1.0.0" />
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Support</Text>
-        <SettingRow icon="help-circle" label="Help center" />
-        <SettingRow icon="lock" label="Privacy policy" />
-        <SettingRow icon="message-circle" label="Contact support" />
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>About</Text>
+        <SettingRow icon="smartphone" label="App version" value="1.0.0" />
+        <SettingRow icon="help-circle" label="Help center" onPress={() => Linking.openURL("https://example.com/help")} />
+        <SettingRow icon="lock" label="Privacy policy" onPress={() => Linking.openURL("https://example.com/privacy")} />
+        <SettingRow icon="message-circle" label="Contact support" onPress={() => Linking.openURL("mailto:support@dadashrivishwa.app")} />
+        <SettingRow icon="star" label="Rate us" />
       </View>
 
-      <Pressable
-        onPress={handleLogout}
-        style={[styles.button, { backgroundColor: colors.destructive }]}
-      >
+      <Pressable onPress={handleLogout} style={[styles.button, { backgroundColor: colors.destructive }]}>
         <Feather name="log-out" size={18} color={colors.destructiveForeground} />
-        <Text style={[styles.buttonText, { color: colors.destructiveForeground }]}>
-          Sign Out
-        </Text>
+        <Text style={[styles.buttonText, { color: colors.destructiveForeground }]}>Sign Out</Text>
       </Pressable>
     </ScrollView>
   );
@@ -173,11 +168,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 16,
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
   },
   buttonText: {
     fontFamily: "Inter_700Bold",

@@ -20,7 +20,7 @@ export function CircularScore({ score, size = 80, showLabel = false }: CircularS
   const sw = Math.round(size * 0.1);
 
   const color =
-    score >= 90 ? "#34C759" : score >= 75 ? "#FF9500" : "#FF3B30";
+    score >= 90 ? colors.success : score >= 75 ? colors.warning : colors.destructive;
   const trackColor = "rgba(0,0,0,0.07)";
 
   const prog = Math.min(100, Math.max(0, score));

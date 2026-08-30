@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -22,16 +21,10 @@ export default function ProfileScreen() {
 
   const person = useMemo(() => {
     if (user?.role === "owner") return null;
-    return (
-      workers.find((w) => w.id === user?.id) ??
-      managers.find((m) => m.id === user?.id)
-    );
+    return workers.find((w) => w.id === user?.id) ?? managers.find((m) => m.id === user?.id);
   }, [workers, managers, user]);
 
-  const myTasks = useMemo(
-    () => tasks.filter((t) => t.assigneeId === user?.id),
-    [tasks, user]
-  );
+  const myTasks = useMemo(() => tasks.filter((t) => t.assigneeId === user?.id), [tasks, user]);
   const completed = myTasks.filter((t) => t.status === "completed").length;
   const withPhoto = myTasks.filter((t) => t.completionPhoto).length;
   const rate = myTasks.length ? Math.round((completed / myTasks.length) * 100) : 0;
@@ -50,24 +43,16 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
-      ]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>Profile</Text>
 
       <View style={[styles.headerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <LinearGradient
-          colors={[colors.gold, colors.goldLight]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.avatar}
-        >
+        <View style={[styles.avatar, { backgroundColor: colors.primary + "15" }]}>
           <Feather name="user" size={36} color={colors.primary} />
-        </LinearGradient>
+        </View>
         <Text style={[styles.name, { color: colors.cardForeground }]}>{user?.name ?? "-"}</Text>
         <Text style={[styles.role, { color: colors.mutedForeground }]}>
           {ROLE_LABEL[user?.role ?? ""] ?? user?.role} · {user?.jobType ?? "Lawn Care"}
@@ -83,7 +68,7 @@ export default function ProfileScreen() {
 
       <View style={[styles.statsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.statBox}>
-          <Text style={[styles.statValue, { color: colors.gold }]}>{myTasks.length}</Text>
+          <Text style={[styles.statValue, { color: colors.primary }]}>{myTasks.length}</Text>
           <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Tasks</Text>
         </View>
         <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
@@ -110,34 +95,21 @@ export default function ProfileScreen() {
         <InfoRow icon="briefcase" label="Business" value={user?.business ?? "Lawn Care"} />
       </View>
 
-      <Pressable
-        onPress={handleLogout}
-        style={[styles.button, { backgroundColor: colors.destructive }]}
-      >
+      <Pressable onPress={handleLogout} style={[styles.button, { backgroundColor: colors.destructive }]}>
         <Feather name="log-out" size={18} color={colors.destructiveForeground} />
-        <Text style={[styles.buttonText, { color: colors.destructiveForeground }]}>
-          Sign Out
-        </Text>
+        <Text style={[styles.buttonText, { color: colors.destructiveForeground }]}>Sign Out</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  label: string;
-  value: string;
-}) {
+function InfoRow({ icon, label, value }: { icon: keyof typeof Feather.glyphMap; label: string; value: string }) {
   const colors = useColors();
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoLeft}>
-        <View style={[styles.infoIcon, { backgroundColor: colors.gold + "15" }]}>
-          <Feather name={icon} size={16} color={colors.gold} />
+        <View style={[styles.infoIcon, { backgroundColor: colors.primary + "12" }]}>
+          <Feather name={icon} size={16} color={colors.primary} />
         </View>
         <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{label}</Text>
       </View>
@@ -162,7 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerCard: {
-    borderRadius: 24,
+    borderRadius: 22,
     borderWidth: 1,
     padding: 24,
     alignItems: "center",
@@ -179,11 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 5,
   },
   name: {
     fontFamily: "Inter_700Bold",
@@ -275,11 +242,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 16,
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
   },
   buttonText: {
     fontFamily: "Inter_700Bold",

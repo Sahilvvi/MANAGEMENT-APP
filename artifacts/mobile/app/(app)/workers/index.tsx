@@ -37,17 +37,25 @@ export default function WorkersScreen() {
     );
   }, [workers, tasks, query]);
 
-  const renderWorker = ({ item, index }: { item: typeof workerStats[0]; index: number }) => (
+  const renderWorker = ({ item, index }: { item: (typeof workerStats)[0]; index: number }) => (
     <Animated.View
       entering={FadeInUp.delay(index * 60).duration(400).springify()}
+      style={{ marginBottom: 12 }}
     >
       <Pressable
         onPress={() => router.push({ pathname: "/workers/[id]", params: { id: item.id } })}
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+          pressed && { opacity: 0.95 },
+        ]}
       >
         <View style={styles.row}>
-          <View style={[styles.avatar, { backgroundColor: colors.gold + "20" }]}>
-            <Feather name="user" size={22} color={colors.gold} />
+          <View style={[styles.avatar, { backgroundColor: colors.primary + "15" }]}>
+            <Feather name="user" size={22} color={colors.primary} />
           </View>
           <View style={styles.info}>
             <Text style={[styles.name, { color: colors.cardForeground }]}>{item.name}</Text>
@@ -63,7 +71,7 @@ export default function WorkersScreen() {
               )}
             </View>
           </View>
-          <ScoreBadge score={item.rate} size="lg" showLabel />
+          <ScoreBadge score={item.rate} size="md" showLabel />
         </View>
       </Pressable>
     </Animated.View>
@@ -73,7 +81,7 @@ export default function WorkersScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
+        { backgroundColor: colors.background, paddingTop: insets.top + 16 },
       ]}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>Workers</Text>
@@ -96,7 +104,7 @@ export default function WorkersScreen() {
         data={workerStats}
         keyExtractor={(w) => w.id}
         renderItem={renderWorker}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -108,10 +116,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     paddingHorizontal: 20,
-  },
-  list: {
-    paddingBottom: 0,
-    gap: 12,
   },
   title: {
     fontFamily: "Inter_700Bold",
@@ -140,10 +144,9 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
-    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,

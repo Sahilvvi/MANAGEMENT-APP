@@ -47,8 +47,8 @@ export default function AppLayout() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loading, { backgroundColor: colors.primary }]}>
-        <ActivityIndicator size="large" color={colors.gold} />
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -65,7 +65,7 @@ export default function AppLayout() {
     <Tabs
       initialRouteName={INITIAL_ROUTE[user.role] ?? "index"}
       screenOptions={{
-        tabBarActiveTintColor: colors.gold,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         headerShown: false,
         tabBarStyle: {
@@ -73,9 +73,11 @@ export default function AppLayout() {
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
           paddingBottom: isWeb ? 8 : insets.bottom,
-          paddingLeft: insets.left,
-          paddingRight: insets.right,
-          minHeight: isWeb ? 60 : 70,
+          paddingTop: 6,
+          minHeight: isWeb ? 60 : 64,
+        },
+        tabBarItemStyle: {
+          paddingTop: 4,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",

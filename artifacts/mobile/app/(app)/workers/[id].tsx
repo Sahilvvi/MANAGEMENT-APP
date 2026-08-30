@@ -86,8 +86,8 @@ export default function WorkerDetailScreen() {
   if (!worker) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Worker not found</Text>
-        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.gold }]}>
+        <Text style={[styles.centerTitle, { color: colors.foreground }]}>Worker not found</Text>
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.primary }]}>
           <Text style={[styles.backText, { color: colors.primaryForeground }]}>Go back</Text>
         </Pressable>
       </View>
@@ -100,7 +100,7 @@ export default function WorkerDetailScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16 }]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       showsVerticalScrollIndicator={false}
     >
       <Pressable onPress={() => router.back()} style={styles.backLink}>
@@ -109,8 +109,8 @@ export default function WorkerDetailScreen() {
       </Pressable>
 
       <Animated.View entering={FadeInUp.duration(450)} style={[styles.headerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.avatar, { backgroundColor: colors.gold + "20" }]}>
-          <Feather name="user" size={32} color={colors.gold} />
+        <View style={[styles.avatar, { backgroundColor: colors.primary + "15" }]}>
+          <Feather name="user" size={32} color={colors.primary} />
         </View>
         <View style={styles.headerText}>
           <Text style={[styles.name, { color: colors.cardForeground }]}>{worker.name}</Text>
@@ -125,11 +125,11 @@ export default function WorkerDetailScreen() {
         <SectionHeader title="Performance snapshot" icon="bar-chart-2" />
         <View style={styles.scoreRow}>
           <View style={styles.scoreBox}>
-            <CircularScore score={fifteenDay.rate} size={110} />
+            <CircularScore score={fifteenDay.rate} size={100} />
             <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>15-day efficiency</Text>
           </View>
           <View style={styles.scoreBox}>
-            <CircularScore score={thirtyDay.rate} size={110} />
+            <CircularScore score={thirtyDay.rate} size={100} />
             <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>30-day efficiency</Text>
           </View>
         </View>
@@ -137,7 +137,7 @@ export default function WorkerDetailScreen() {
 
       <Animated.View entering={FadeInUp.delay(200).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Last 7 days" subtitle="Tasks completed per day" icon="activity" />
-        <BarChart data={trend.map((d) => ({ ...d, color: [colors.gold, colors.goldLight] as [string, string] }))} height={140} />
+        <BarChart data={trend.map((d) => ({ ...d, color: colors.primary }))} height={140} />
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(300).duration(450)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -203,7 +203,7 @@ function ReportBox({
   return (
     <View style={[styles.reportBox, { borderColor: colors.border }]}>
       <Text style={[styles.reportLabel, { color: colors.mutedForeground }]}>{label}</Text>
-      <Text style={[styles.reportRate, { color: colors.gold }]}>{rate}%</Text>
+      <Text style={[styles.reportRate, { color: colors.primary }]}>{rate}%</Text>
       <Text style={[styles.reportDetail, { color: colors.cardForeground }]}>
         {completed}/{total} done
       </Text>
@@ -228,15 +228,15 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
   },
-  content: {
-    paddingBottom: 24,
-    gap: 16,
-  },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
+  },
+  centerTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
   },
   backLink: {
     flexDirection: "row",
@@ -258,32 +258,30 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
   },
-  title: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-  },
   headerCard: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 20,
+    padding: 18,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 14,
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     alignItems: "center",
     justifyContent: "center",
   },
   headerText: {
-    gap: 6,
+    flex: 1,
+    gap: 5,
   },
   name: {
     fontFamily: "Inter_700Bold",
@@ -305,14 +303,15 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 14,
   },
   scoreRow: {
     flexDirection: "row",
@@ -322,19 +321,23 @@ const styles = StyleSheet.create({
   scoreBox: {
     alignItems: "center",
     gap: 8,
+    flex: 1,
   },
   scoreLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
+    textAlign: "center",
   },
   reportGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   reportBox: {
     flex: 1,
+    minWidth: "28%",
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 12,
     alignItems: "center",
     gap: 4,
@@ -347,7 +350,7 @@ const styles = StyleSheet.create({
   },
   reportRate: {
     fontFamily: "Inter_700Bold",
-    fontSize: 26,
+    fontSize: 24,
   },
   reportDetail: {
     fontFamily: "Inter_600SemiBold",
@@ -362,7 +365,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(0,0,0,0.06)",
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   infoLabel: {
     fontFamily: "Inter_400Regular",
@@ -399,13 +402,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   workPhoto: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: 10,
   },
   noPhoto: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",

@@ -83,17 +83,14 @@ export default function PerformanceScreen() {
   const getRating = (score: number) => {
     if (score >= 90) return { label: "Excellent", color: colors.success };
     if (score >= 75) return { label: "Good", color: colors.warning };
-    if (score >= 60) return { label: "Average", color: colors.gold };
+    if (score >= 60) return { label: "Average", color: colors.primary };
     return { label: "Needs focus", color: colors.destructive };
   };
   const rating = getRating(rate);
 
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
-      ]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
       showsVerticalScrollIndicator={false}
     >
@@ -113,7 +110,7 @@ export default function PerformanceScreen() {
           </View>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.gold }]}>{pending}</Text>
+            <Text style={[styles.statValue, { color: colors.warning }]}>{pending}</Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Pending</Text>
           </View>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -133,7 +130,7 @@ export default function PerformanceScreen() {
 
       <Animated.View entering={FadeInUp.delay(200).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <SectionHeader title="Last 7 days" subtitle="Tasks completed per day" icon="activity" />
-        <BarChart data={trend.map((d) => ({ ...d, color: [colors.gold, colors.goldLight] as [string, string] }))} height={140} />
+        <BarChart data={trend.map((d) => ({ ...d, color: colors.primary }))} height={140} />
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(300).duration(500)} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -183,7 +180,7 @@ function ReportBox({
   return (
     <View style={[styles.reportBox, { borderColor: colors.border }]}>
       <Text style={[styles.reportLabel, { color: colors.mutedForeground }]}>{label}</Text>
-      <Text style={[styles.reportRate, { color: colors.gold }]}>{stats.rate}%</Text>
+      <Text style={[styles.reportRate, { color: colors.primary }]}>{stats.rate}%</Text>
       <Text style={[styles.reportDetail, { color: colors.cardForeground }]}>
         {stats.completed}/{stats.total} done
       </Text>
@@ -274,10 +271,12 @@ const styles = StyleSheet.create({
   },
   reportGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   reportBox: {
     flex: 1,
+    minWidth: "28%",
     borderWidth: 1,
     borderRadius: 16,
     padding: 12,

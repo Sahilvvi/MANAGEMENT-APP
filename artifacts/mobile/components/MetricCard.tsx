@@ -31,7 +31,6 @@ export function MetricCard({ label, value, change, icon, iconColor, style, accen
         style,
       ]}
     >
-      {/* Accent bar */}
       <View style={[styles.accentBar, { backgroundColor: accent }]} />
 
       <View style={styles.inner}>
@@ -79,15 +78,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
     overflow: "hidden",
+    flex: 1,
+    minWidth: "46%",
   },
   accentBar: {
     height: 3,
     width: "100%",
-    opacity: 0.85,
+    opacity: 0.9,
   },
   inner: {
     padding: 14,
@@ -106,13 +107,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "Inter_500Medium",
     letterSpacing: 0.1,
     flex: 1,
   },
   value: {
-    fontSize: 21,
+    fontSize: 22,
     fontFamily: "Inter_700Bold",
     letterSpacing: -0.5,
   },
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   subLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Inter_400Regular",
   },
 });

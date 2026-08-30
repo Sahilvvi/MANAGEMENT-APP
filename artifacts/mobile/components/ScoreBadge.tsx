@@ -9,11 +9,11 @@ interface ScoreBadgeProps {
   showLabel?: boolean;
 }
 
-function getScoreColor(score: number) {
-  if (score >= 90) return "#34C759";
-  if (score >= 75) return "#FF9500";
-  if (score >= 60) return "#FF6B00";
-  return "#FF3B30";
+function getScoreColor(score: number, colors: ReturnType<typeof useColors>) {
+  if (score >= 90) return colors.success;
+  if (score >= 75) return colors.warning;
+  if (score >= 60) return "#F97316";
+  return colors.destructive;
 }
 
 function getScoreLabel(score: number) {
@@ -25,7 +25,7 @@ function getScoreLabel(score: number) {
 
 export function ScoreBadge({ score, size = "md", style, showLabel = false }: ScoreBadgeProps) {
   const colors = useColors();
-  const color = getScoreColor(score);
+  const color = getScoreColor(score, colors);
   const dim = size === "lg" ? 56 : size === "md" ? 40 : 28;
   const fontSize = size === "lg" ? 18 : size === "md" ? 14 : 10;
 

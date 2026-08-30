@@ -14,11 +14,11 @@ export function SectionHeader({ title, subtitle, icon }: SectionHeaderProps) {
   return (
     <View style={styles.container}>
       {icon && (
-        <View style={[styles.icon, { backgroundColor: colors.gold + "18" }]}>
-          <Feather name={icon} size={16} color={colors.gold} />
+        <View style={[styles.icon, { backgroundColor: colors.primary + "14" }]}>
+          <Feather name={icon} size={16} color={colors.primary} />
         </View>
       )}
-      <View>
+      <View style={styles.text}>
         <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
         {subtitle && (
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
@@ -33,13 +33,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   icon: {
     width: 34,
     height: 34,
     borderRadius: 10,
     alignItems: "center",
+    justifyContent: "center",
+  },
+  text: {
+    flex: 1,
     justifyContent: "center",
   },
   title: {

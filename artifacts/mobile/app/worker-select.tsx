@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
@@ -50,18 +49,13 @@ export default function WorkerSelectScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top },
       ]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <LinearGradient
-          colors={[colors.success, "#8CEF99"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.badge}
-        >
-          <Text style={styles.badgeText}>Lawn Care</Text>
-        </LinearGradient>
+        <View style={[styles.badge, { backgroundColor: colors.primary + "15" }]}>
+          <Text style={[styles.badgeText, { color: colors.primary }]}>Lawn Care</Text>
+        </View>
         <Text style={[styles.title, { color: colors.foreground }]}>
           Select your profile
         </Text>
@@ -78,26 +72,22 @@ export default function WorkerSelectScreen() {
           >
             <Pressable
               onPress={() => handleSelect(worker)}
-              style={[
+              style={({ pressed }) => [
                 styles.card,
                 {
                   backgroundColor: colors.card,
                   borderColor: colors.border,
                 },
+                pressed && { opacity: 0.9 },
               ]}
             >
-              <LinearGradient
-                colors={[colors.gold, colors.goldLight]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.iconCircle}
-              >
+              <View style={[styles.iconSquare, { backgroundColor: colors.primary + "15" }]}>
                 <Feather
                   name={ICONS[worker.jobType] ?? "user"}
-                  size={24}
+                  size={22}
                   color={colors.primary}
                 />
-              </LinearGradient>
+              </View>
               <View style={styles.text}>
                 <Text style={[styles.cardTitle, { color: colors.cardForeground }]}>
                   {worker.name}
@@ -121,9 +111,6 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 24,
   },
-  content: {
-    paddingBottom: 24,
-  },
   header: {
     paddingTop: 28,
     paddingBottom: 32,
@@ -138,7 +125,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: "Inter_700Bold",
     fontSize: 12,
-    color: "#0A1628",
     letterSpacing: 0.5,
   },
   title: {
@@ -160,25 +146,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+  iconSquare: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
   },
   text: {
     flex: 1,

@@ -32,27 +32,37 @@ export default function ManagersScreen() {
   const renderManager = ({ item, index }: { item: (typeof managerStats)[0]; index: number }) => (
     <Animated.View
       entering={FadeInUp.delay(index * 70).duration(400).springify()}
+      style={{ marginBottom: 12 }}
     >
       <Pressable
         onPress={() => router.push({ pathname: "/managers/[id]", params: { id: item.id } })}
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+          pressed && { opacity: 0.95 },
+        ]}
       >
-        <View style={[styles.avatar, { backgroundColor: colors.gold + "20" }]}>
-          <Feather name="briefcase" size={22} color={colors.gold} />
-        </View>
-        <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.cardForeground }]}>{item.name}</Text>
-          <Text style={[styles.role, { color: colors.mutedForeground }]}>Manager · {item.phone}</Text>
-          <View style={styles.chips}>
-            <View style={[styles.chip, { backgroundColor: colors.warning + "15" }]}>
-              <Text style={[styles.chipText, { color: colors.warning }]}>{item.reportedIssues} issues</Text>
-            </View>
-            <View style={[styles.chip, { backgroundColor: colors.success + "15" }]}>
-              <Text style={[styles.chipText, { color: colors.success }]}>{item.assignedTasks} tasks</Text>
+        <View style={styles.row}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary + "15" }]}>
+            <Feather name="briefcase" size={22} color={colors.primary} />
+          </View>
+          <View style={styles.info}>
+            <Text style={[styles.name, { color: colors.cardForeground }]}>{item.name}</Text>
+            <Text style={[styles.role, { color: colors.mutedForeground }]}>Manager · {item.phone}</Text>
+            <View style={styles.chips}>
+              <View style={[styles.chip, { backgroundColor: colors.warning + "15" }]}>
+                <Text style={[styles.chipText, { color: colors.warning }]}>{item.reportedIssues} issues</Text>
+              </View>
+              <View style={[styles.chip, { backgroundColor: colors.success + "15" }]}>
+                <Text style={[styles.chipText, { color: colors.success }]}>{item.assignedTasks} tasks</Text>
+              </View>
             </View>
           </View>
+          <Feather name="chevron-right" size={22} color={colors.mutedForeground} />
         </View>
-        <Feather name="chevron-right" size={22} color={colors.mutedForeground} />
       </Pressable>
     </Animated.View>
   );
@@ -61,7 +71,7 @@ export default function ManagersScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20 },
+        { backgroundColor: colors.background, paddingTop: insets.top + 16 },
       ]}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>Managers</Text>
@@ -84,7 +94,7 @@ export default function ManagersScreen() {
         data={managerStats}
         keyExtractor={(m) => m.id}
         renderItem={renderManager}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -96,10 +106,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     paddingHorizontal: 20,
-  },
-  list: {
-    paddingBottom: 0,
-    gap: 12,
   },
   title: {
     fontFamily: "Inter_700Bold",
@@ -128,18 +134,19 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
-    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
   },
   avatar: {
     width: 50,

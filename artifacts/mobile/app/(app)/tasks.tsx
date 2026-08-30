@@ -23,10 +23,10 @@ import { useToast } from "@/context/ToastContext";
 import { useColors } from "@/hooks/useColors";
 
 const PRIORITY_COLOR: Record<Task["priority"], string> = {
-  low: "#34C759",
-  medium: "#FF9500",
-  high: "#FF6B00",
-  critical: "#FF3B30",
+  low: "#22C55E",
+  medium: "#F59E0B",
+  high: "#F97316",
+  critical: "#EF4444",
 };
 
 const STATUS_LABEL: Record<Task["status"], string> = {
@@ -37,10 +37,10 @@ const STATUS_LABEL: Record<Task["status"], string> = {
 };
 
 const STATUS_COLORS: Record<Task["status"], string> = {
-  pending: "#FF9500",
-  in_progress: "#0A84FF",
-  completed: "#34C759",
-  overdue: "#FF3B30",
+  pending: "#F59E0B",
+  in_progress: "#3B82F6",
+  completed: "#22C55E",
+  overdue: "#EF4444",
 };
 
 const FILTERS: Array<{ key: "all" | Task["status"]; label: string }> = [
@@ -63,7 +63,7 @@ export default function TasksScreen() {
 
   const isWorker = user?.role === "employee";
 
-  const [filter, setFilter] = useState<"all" | Task["status"]>('all');
+  const [filter, setFilter] = useState<"all" | Task["status"]>(isWorker ? "pending" : "all");
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -71,56 +71,72 @@ export default function TasksScreen() {
   const [newPriority, setNewPriority] = useState<Task["priority"]>("medium");
   const [newRecurrence, setNewRecurrence] = useState<TaskRecurrence>("daily");
 
+  const today = isoToday();
+
   const filteredTasks = useMemo(() => {
     const base = isWorker
-      ? tasks.filter((t) => t.assigneeId === user?.id)
-      : tasks.filter((t) => t.business === "lawn");
+      ? tasks.filter((t) => t.assigneeId === user?.id && t.dueDate === today)
+      : tasks.filter((t) => t.business === "lawn" && t.dueDate === today);
     const byStatus = filter === "all" ? base : base.filter((t) => t.status === filter);
     return [...byStatus].sort((a, b) => {
       if (a.status === b.status) return a.dueDate.localeCompare(b.dueDate);
       const order: Record<Task["status"], number> = { pending: 0, in_progress: 1, overdue: 2, completed: 3 };
       return order[a.status] - order[b.status];
     });
-  }, [tasks, user, isWorker, filter]);
+  }, [tasks, user, isWorker, filter, today]);
+  const todayTasks = isWorker
+    ? tasks.filter((t) => t.assigneeId === user?.id && t.dueDate === today)
+    : tasks.filter((t) => t.dueDate === today);
+  const todayCompleted = todayTasks.filter((t) => t.status === "completed").length;
+  const todayTotal = todayTasks.length;
+  const completionRate = todayTotal ? Math.round((todayCompleted / todayTotal) * 100) : 0;
 
-  const completedCount = filteredTasks.filter((t) => t.status === "completed").length;
-  const totalCount = filteredTasks.length;
-  const completionRate = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+  const pickProofImage = async (): Promise<ImagePicker.ImagePickerAsset | null> => {
+    if (Platform.OS === "web") {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.6,
+        base64: true,
+      });
+      return result.canceled || !result.assets?.length ? null : result.assets[0];
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.6,
+      base64: true,
+    });
+
+    if (result.canceled && result.assets === undefined) {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission needed", "Allow camera or gallery access to complete tasks with photo proof.");
+        return null;
+      }
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.6,
+        base64: true,
+      });
+    }
+
+    return result.canceled || !result.assets?.length ? null : result.assets[0];
+  };
 
   const handleComplete = async (task: Task) => {
     try {
-      let result: ImagePicker.ImagePickerResult;
-
-      if (Platform.OS === "web") {
-        result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: false,
-          quality: 0.3,
-          base64: true,
-        });
-      } else {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Permission needed", "Allow camera access to complete tasks with photo proof.");
-          return;
-        }
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [4, 3],
-          quality: 0.3,
-          base64: true,
-        });
-      }
-
-      if (result.canceled || !result.assets?.length) return;
-
-      const asset = result.assets[0];
-      const photo = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : (asset.uri ?? "");
+      const asset = await pickProofImage();
+      if (!asset) return;
+      const photo = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
       await completeTask(task.id, photo);
       showToast("Task completed and proof uploaded", "success");
     } catch (e) {
-      Alert.alert("Error", "Could not capture photo. Please try again.");
+      Alert.alert("Error", "Could not upload photo. Please try again.");
     }
   };
 
@@ -165,8 +181,8 @@ export default function TasksScreen() {
 
       {!isWorker && (
         <View style={styles.assigneeRow}>
-          <View style={[styles.miniAvatar, { backgroundColor: colors.gold + "20" }]}>
-            <Feather name="user" size={12} color={colors.gold} />
+          <View style={[styles.miniAvatar, { backgroundColor: colors.primary + "15" }]}>
+            <Feather name="user" size={12} color={colors.primary} />
           </View>
           <Text style={[styles.meta, { color: colors.mutedForeground }]}>
             {item.assigneeName} · {item.recurrence} · {item.priority} priority
@@ -179,14 +195,9 @@ export default function TasksScreen() {
       )}
 
       {item.status !== "completed" && isWorker && (
-        <Pressable
-          onPress={() => handleComplete(item)}
-          style={[styles.actionButton, { backgroundColor: colors.success }]}
-        >
+        <Pressable onPress={() => handleComplete(item)} style={[styles.actionButton, { backgroundColor: colors.success }]}>
           <Feather name="camera" size={16} color={colors.successForeground} />
-          <Text style={[styles.actionText, { color: colors.successForeground }]}>
-            Complete with photo
-          </Text>
+          <Text style={[styles.actionText, { color: colors.successForeground }]}>Complete with photo</Text>
         </Pressable>
       )}
 
@@ -209,29 +220,26 @@ export default function TasksScreen() {
       ]}
     >
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerText}>
           <Text style={[styles.title, { color: colors.foreground }]}>
             {isWorker ? "My Tasks" : "Assign Tasks"}
           </Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {isWorker
-              ? `${completedCount}/${totalCount} completed today`
+              ? `${todayCompleted}/${todayTotal} completed today`
               : "Create, track and review daily lawn tasks"}
           </Text>
         </View>
         {!isWorker && (
-          <Pressable
-            onPress={() => setShowCreate(true)}
-            style={[styles.iconButton, { backgroundColor: colors.gold }]}
-          >
+          <Pressable onPress={() => setShowCreate(true)} style={[styles.iconButton, { backgroundColor: colors.primary }]}>
             <Feather name="plus" size={22} color={colors.primaryForeground} />
           </Pressable>
         )}
       </View>
 
       {isWorker && (
-        <View style={[styles.scoreCard, { backgroundColor: colors.gold + "12" }]}>
-          <Text style={[styles.scoreValue, { color: colors.gold }]}>{completionRate}%</Text>
+        <View style={[styles.scoreCard, { backgroundColor: colors.primary + "10" }]}>
+          <Text style={[styles.scoreValue, { color: colors.primary }]}>{completionRate}%</Text>
           <Text style={[styles.scoreLabel, { color: colors.mutedForeground }]}>Completion rate</Text>
         </View>
       )}
@@ -244,8 +252,8 @@ export default function TasksScreen() {
             style={[
               styles.filterChip,
               {
-                backgroundColor: filter === f.key ? colors.gold : colors.card,
-                borderColor: filter === f.key ? colors.gold : colors.border,
+                backgroundColor: filter === f.key ? colors.primary : colors.card,
+                borderColor: filter === f.key ? colors.primary : colors.border,
               },
             ]}
           >
@@ -268,9 +276,7 @@ export default function TasksScreen() {
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text style={[styles.empty, { color: colors.mutedForeground }]}>
-            No tasks found for this filter.
-          </Text>
+          <Text style={[styles.empty, { color: colors.mutedForeground }]}>No tasks found for this filter.</Text>
         }
       />
 
@@ -305,7 +311,7 @@ export default function TasksScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: newAssignee === w.id ? colors.gold : colors.background,
+                        backgroundColor: newAssignee === w.id ? colors.primary : colors.background,
                         borderColor: colors.border,
                       },
                     ]}
@@ -326,7 +332,7 @@ export default function TasksScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: newPriority === p ? colors.gold : colors.background,
+                        backgroundColor: newPriority === p ? colors.primary : colors.background,
                         borderColor: colors.border,
                       },
                     ]}
@@ -347,7 +353,7 @@ export default function TasksScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: newRecurrence === r ? colors.gold : colors.background,
+                        backgroundColor: newRecurrence === r ? colors.primary : colors.background,
                         borderColor: colors.border,
                       },
                     ]}
@@ -360,16 +366,10 @@ export default function TasksScreen() {
               </View>
 
               <View style={styles.modalActions}>
-                <Pressable
-                  onPress={() => setShowCreate(false)}
-                  style={[styles.modalButton, { backgroundColor: colors.muted }]}
-                >
+                <Pressable onPress={() => setShowCreate(false)} style={[styles.modalButton, { backgroundColor: colors.muted }]}>
                   <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }}>Cancel</Text>
                 </Pressable>
-                <Pressable
-                  onPress={handleCreateTask}
-                  style={[styles.modalButton, { backgroundColor: colors.primary }]}
-                >
+                <Pressable onPress={handleCreateTask} style={[styles.modalButton, { backgroundColor: colors.primary }]}>
                   <Text style={{ color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }}>Assign</Text>
                 </Pressable>
               </View>
@@ -396,6 +396,10 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 16,
+  },
+  headerText: {
+    flex: 1,
+    paddingRight: 12,
   },
   title: {
     fontFamily: "Inter_700Bold",
@@ -435,6 +439,7 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 16,
   },
@@ -449,7 +454,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,
@@ -526,11 +531,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderRadius: 14,
     marginTop: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
   },
   actionText: {
     fontFamily: "Inter_700Bold",

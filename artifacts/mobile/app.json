@@ -8,22 +8,26 @@
     "scheme": "dadashrivishwa",
     "userInterfaceStyle": "automatic",
     "androidStatusBar": {
-      "backgroundColor": "#0A1628",
+      "backgroundColor": "#F8FAF9",
       "translucent": true,
-      "barStyle": "light-content"
+      "barStyle": "dark-content"
     },
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A1628"
+      "backgroundColor": "#F8FAF9"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.enterprise.opshub"
+      "bundleIdentifier": "com.dadashrivishwa.app"
     },
     "android": {
-      "package": "com.enterprise.opshub"
+      "package": "com.dadashrivishwa.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#F8FAF9"
+      }
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -40,7 +44,13 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Enterprise Ops Hub needs location for geo-fence check-in verification."
+          "locationAlwaysAndWhenInUsePermission": "DADASHRIVISHWA needs location for geo-fence check-in verification."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DADASHRIVISHWA needs gallery access to attach photo proof."
         }
       ]
     ],

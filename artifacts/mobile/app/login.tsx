@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
@@ -19,7 +18,6 @@ interface RoleOption {
   label: string;
   icon: keyof typeof Feather.glyphMap;
   description: string;
-  accent: [string, string];
   user: User;
 }
 
@@ -31,7 +29,6 @@ const ROLES: RoleOption[] = [
     label: "Super Admin",
     icon: "shield",
     description: "Full oversight of the lawn operation",
-    accent: ["#C9A84C", "#E8D59A"],
     user: { id: "lawn-admin", name: "Ravi Kumar", role: "owner", ...BASE },
   },
   {
@@ -39,7 +36,6 @@ const ROLES: RoleOption[] = [
     label: "Manager",
     icon: "briefcase",
     description: "Manage workers and daily operations",
-    accent: ["#0A84FF", "#5AC8FA"],
     user: { id: "lawn-manager", name: "Sunita Devi", role: "manager", ...BASE },
   },
   {
@@ -47,7 +43,6 @@ const ROLES: RoleOption[] = [
     label: "Worker",
     icon: "user",
     description: "Complete daily tasks and upload proof",
-    accent: ["#34C759", "#8CEF99"],
     user: { id: "lawn-worker", name: "Worker", role: "employee", ...BASE, jobType: "" },
   },
 ];
@@ -75,18 +70,13 @@ export default function RoleSelectScreen() {
         styles.container,
         { backgroundColor: colors.background, paddingTop: insets.top },
       ]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <LinearGradient
-          colors={[colors.gold, colors.goldLight]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.badge}
-        >
-          <Text style={styles.badgeText}>{businessName}</Text>
-        </LinearGradient>
+        <View style={[styles.badge, { backgroundColor: colors.primary + "15" }]}>
+          <Text style={[styles.badgeText, { color: colors.primary }]}>{businessName}</Text>
+        </View>
         <Text style={[styles.title, { color: colors.foreground }]}>
           Who is using the app today?
         </Text>
@@ -99,26 +89,22 @@ export default function RoleSelectScreen() {
         {ROLES.map((option, index) => (
           <Animated.View
             key={option.role}
-            entering={FadeInUp.delay(index * 90).duration(450).springify()}
+            entering={FadeInUp.delay(index * 80).duration(420).springify()}
           >
             <Pressable
               onPress={() => handleSelect(option)}
-              style={[
+              style={({ pressed }) => [
                 styles.card,
                 {
                   backgroundColor: colors.card,
                   borderColor: colors.border,
                 },
+                pressed && { opacity: 0.9 },
               ]}
             >
-              <LinearGradient
-                colors={option.accent}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.iconCircle}
-              >
-                <Feather name={option.icon} size={26} color="#FFF" />
-              </LinearGradient>
+              <View style={[styles.iconSquare, { backgroundColor: colors.primary + "15" }]}>
+                <Feather name={option.icon} size={24} color={colors.primary} />
+              </View>
               <View style={styles.text}>
                 <Text style={[styles.cardTitle, { color: colors.cardForeground }]}>
                   {option.label}
@@ -142,9 +128,6 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 24,
   },
-  content: {
-    paddingBottom: 24,
-  },
   header: {
     paddingTop: 28,
     paddingBottom: 32,
@@ -159,7 +142,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: "Inter_700Bold",
     fontSize: 12,
-    color: "#0A1628",
     letterSpacing: 0.5,
   },
   title: {
@@ -181,25 +163,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     padding: 18,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  iconCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+  iconSquare: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
   },
   text: {
     flex: 1,
@@ -211,7 +188,7 @@ const styles = StyleSheet.create({
   },
   cardDesc: {
     fontFamily: "Inter_400Regular",
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
